@@ -3,7 +3,10 @@
     "dev": "deno run -A --node-modules-dir npm:vite",
     "build": "deno run -A --node-modules-dir npm:vite build",
     "preview": "deno run -A --node-modules-dir npm:vite preview",
-    "serve": "deno run --allow-net --allow-read jsr:@std/http@1/file-server dist/"
+    "serve": "deno run --allow-net --allow-read jsr:@std/http@1/file-server dist/",
+    "deploy": "deno task build && cd dist && deployctl deploy --project=vite-react-tailwind --entrypoint=jsr:@std/http@1/file-server",
+    "deploy:custom": "deno task build && cd dist && deployctl deploy --project=$PROJECT_NAME --entrypoint=jsr:@std/http@1/file-server",
+    "deploy:script": "deno run --allow-net --allow-read --allow-write --allow-env deploy.ts"
   },
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
