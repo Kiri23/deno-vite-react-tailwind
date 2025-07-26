@@ -35,6 +35,29 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Counter endpoint para datos iniciales
+  if (url.pathname === "/api/counter") {
+    try {
+      const data = await kv.get(["counter"]);
+      const counterValue = (data.value as Deno.KvU64 | undefined)?.value ?? 0;
+      return new Response(JSON.stringify({ counter: Number(counterValue) }), {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    } catch (error) {
+      console.error("Error getting counter:", error);
+      return new Response(JSON.stringify({ error: "Failed to get counter" }), {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+  }
+
   // SSE endpoint
   if (url.pathname === "/api/sse") {
     console.log("SSE connection requested");

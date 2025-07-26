@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
-import { KVDemo } from './components/KVDemo.tsx'
+import { TanStackDemo } from './components/TanStackDemo.tsx'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -47,12 +47,19 @@ function App() {
           </div>
         </div>
 
+        {/* TanStack Query + SSE Demo Section */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <h3 className="text-2xl font-semibold text-gray-800 mb-6">
+            TanStack Query + SSE Demo
+          </h3>
+          <TanStackDemo />
+        </div>
+
         {/* KV Demo Section */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <h3 className="text-2xl font-semibold text-gray-800 mb-6">
             Deno KV Real-time Demo
           </h3>
-          <KVDemo />
         </div>
 
         {/* Features Section */}

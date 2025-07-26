@@ -3,6 +3,7 @@
   "specifiers": {
     "npm:@deno/vite-plugin@^1.0.5": "1.0.5_vite@7.0.6__picomatch@4.0.3",
     "npm:@tailwindcss/vite@4": "4.1.11_vite@7.0.6__picomatch@4.0.3",
+    "npm:@tanstack/react-query@^5.83.0": "5.83.0_react@19.1.0",
     "npm:@types/react-dom@^19.1.6": "19.1.6_@types+react@19.1.8",
     "npm:@types/react@^19.1.8": "19.1.8",
     "npm:@vitejs/plugin-react@^4.6.0": "4.7.0_vite@7.0.6__picomatch@4.0.3_@babel+core@7.28.0",
@@ -559,6 +560,16 @@
         "vite"
       ]
     },
+    "@tanstack/query-core@5.83.0": {
+      "integrity": "sha512-0M8dA+amXUkyz5cVUm/B+zSk3xkQAcuXuz5/Q/LveT4ots2rBpPTZOzd7yJa2Utsf8D2Upl5KyjhHRY+9lB/XA=="
+    },
+    "@tanstack/react-query@5.83.0_react@19.1.0": {
+      "integrity": "sha512-/XGYhZ3foc5H0VM2jLSD/NyBRIOK4q9kfeml4+0x2DlL6xVuAcVEW+hTlTapAmejObg0i3eNqhkr2dT+eciwoQ==",
+      "dependencies": [
+        "@tanstack/query-core",
+        "react"
+      ]
+    },
     "@tybys/wasm-util@0.10.0": {
       "integrity": "sha512-VyyPYFlOMNylG45GoAe0xDoLwWuowvf92F9kySqzYh8vmYm7D2u4iUJKa1tOUpS70Ku13ASrOkS4ScXFsTaCNQ==",
       "dependencies": [
@@ -978,6 +989,19 @@
       "npm:react@^19.1.0",
       "npm:tailwindcss@4",
       "npm:vite@7"
-    ]
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:@tailwindcss/vite@4",
+        "npm:@tanstack/react-query@^5.83.0",
+        "npm:@types/react-dom@^19.1.6",
+        "npm:@types/react@^19.1.8",
+        "npm:@vitejs/plugin-react@^4.6.0",
+        "npm:react-dom@^19.1.0",
+        "npm:react@^19.1.0",
+        "npm:tailwindcss@4",
+        "npm:vite@7"
+      ]
+    }
   }
 }
