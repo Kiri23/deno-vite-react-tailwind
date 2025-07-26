@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
+import { KVDemo } from './components/KVDemo.tsx'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -46,6 +47,14 @@ function App() {
           </div>
         </div>
 
+        {/* KV Demo Section */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <h3 className="text-2xl font-semibold text-gray-800 mb-6">
+            Deno KV Real-time Demo
+          </h3>
+          <KVDemo />
+        </div>
+
         {/* Features Section */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h3 className="text-2xl font-semibold text-gray-800 mb-6">
@@ -75,6 +84,10 @@ function App() {
             <div className="flex items-center space-x-3 p-3 bg-indigo-50 rounded-lg">
               <span className="text-indigo-600 text-xl">✅</span>
               <span className="text-gray-700">Tailwind CSS v4</span>
+            </div>
+            <div className="flex items-center space-x-3 p-3 bg-emerald-50 rounded-lg">
+              <span className="text-emerald-600 text-xl">✅</span>
+              <span className="text-gray-700">Deno KV with real-time updates</span>
             </div>
           </div>
         </div>

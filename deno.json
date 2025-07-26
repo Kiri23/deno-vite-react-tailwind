@@ -6,7 +6,8 @@
     "serve": "deno run --allow-net --allow-read jsr:@std/http@1/file-server dist/",
     "deploy": "deno task build && cd dist && deployctl deploy --project=vite-react-tailwind --entrypoint=jsr:@std/http@1/file-server",
     "deploy:custom": "deno task build && cd dist && deployctl deploy --project=$PROJECT_NAME --entrypoint=jsr:@std/http@1/file-server",
-    "deploy:script": "deno run --allow-net --allow-read --allow-write --allow-env deploy.ts"
+    "deploy:script": "deno run --allow-net --allow-read --allow-write --allow-env deploy.ts",
+    "dev:kv": "deno run --allow-net --allow-env --allow-read --allow-write --node-modules-dir npm:vite"
   },
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
