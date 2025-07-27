@@ -1,0 +1,64 @@
+{
+  "name": "@your-org/kiri-web-framework",
+  "version": "1.0.0",
+  "description": "A lightweight, functional web framework for Deno inspired by Oak and Express",
+  "main": "./mod.ts",
+  "exports": {
+    ".": "./mod.ts",
+    "./app": "./App.ts",
+    "./router": "./Router.ts",
+    "./middleware": "./Middleware.ts",
+    "./helpers": "./helpers/middleware.ts"
+  },
+  "files": [
+    "mod.ts",
+    "App.ts",
+    "Router.ts",
+    "Middleware.ts",
+    "helpers/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "deno",
+    "web-framework",
+    "middleware",
+    "functional-programming",
+    "typescript",
+    "oak",
+    "express"
+  ],
+  "author": "Your Name <your-email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/kiri-web-framework.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/kiri-web-framework/issues"
+  },
+  "homepage": "https://github.com/your-org/kiri-web-framework#readme",
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"],
+    "strict": true
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "include": ["**/*.ts", "**/*.js", "**/*.json"]
+    },
+    "options": {
+      "useTabs": false,
+      "lineWidth": 80,
+      "indentWidth": 2,
+      "semiColons": true,
+      "singleQuote": false,
+      "proseWrap": "preserve"
+    }
+  }
+} 

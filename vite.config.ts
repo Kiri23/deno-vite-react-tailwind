@@ -5,5 +5,6 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
+  // @ts-ignore - Plugin compatibility issue between Vite versions
   plugins: [deno(), react(), tailwindcss()],
 });
