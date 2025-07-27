@@ -4,6 +4,7 @@
 // Core classes
 export { App } from "./App.ts";
 export { Router } from "./Router.ts";
+export { Context } from "./Context.ts";
 
 // Middleware utilities
 export {

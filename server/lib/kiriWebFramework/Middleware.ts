@@ -1,24 +1,28 @@
+import { Context } from "./Context.ts";
+
 type Middleware = (
-  req: Request,
+  ctx: Context,
   next: () => Promise<Response>,
 ) => Promise<Response>;
 
 // Middleware de logging
-export const loggingMiddleware: Middleware = async (req, next) => {
+export const loggingMiddleware: Middleware = async (ctx, next) => {
   const start = Date.now();
-  console.log(`📥 ${req.method} ${req.url}`);
+  console.log(`📥 ${ctx.request.method} ${ctx.request.url}`);
 
   const response = await next();
 
   const duration = Date.now() - start;
-  console.log(`📤 ${response.status} ${req.method} ${req.url} - ${duration}ms`);
+  console.log(
+    `📤 ${response.status} ${ctx.request.method} ${ctx.request.url} - ${duration}ms`,
+  );
 
   return response;
 };
 
 // Middleware de CORS
-export const corsMiddleware: Middleware = async (req, next) => {
-  if (req.method === "OPTIONS") {
+export const corsMiddleware: Middleware = async (ctx, next) => {
+  if (ctx.request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
         "Access-Control-Allow-Origin": "*",
@@ -49,21 +53,21 @@ export const corsMiddleware: Middleware = async (req, next) => {
 export const staticFilesMiddleware = (
   basePath: string = "./dist",
 ): Middleware => {
-
   const verifyBasePath = async (basePath: string) => {
     try {
-       const stat = await Deno.stat(basePath);
-       if (stat.isDirectory) {
+      const stat = await Deno.stat(basePath);
+      if (stat.isDirectory) {
         console.log(`📁 Serving static files will be served from: ${basePath}`);
       }
     } catch (error) {
-      console.error(`❌ Base path is not a directory: ${basePath}. Files will not be served.`,
+      console.error(
+        `❌ Base path is not a directory: ${basePath}. Files will not be served.`,
       );
     }
   };
   verifyBasePath(basePath);
-  return async (req, next) => {
-    const url = new URL(req.url);
+  return async (ctx, next) => {
+    const url = new URL(ctx.request.url);
 
     // Solo manejar archivos estáticos
     if (
@@ -109,20 +113,16 @@ export const staticFilesMiddleware = (
 };
 
 // Middleware de manejo de errores
-export const errorHandlerMiddleware: Middleware = async (req, next) => {
+export const errorHandlerMiddleware: Middleware = async (ctx, next) => {
   try {
     return await next();
   } catch (error) {
     console.error("❌ Error:", error);
-    return new Response(
-      JSON.stringify({
-        error: "Internal Server Error",
-        message: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    ctx.response.status = 500;
+    ctx.response.body = {
+      error: "Internal Server Error",
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
+    return ctx.toResponse();
   }
 };

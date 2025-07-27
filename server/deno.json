@@ -2,6 +2,7 @@
   "name": "vite-react-app-server",
   "version": "1.0.0",
   "description": "Server for Vite React App using Kiri Web Framework",
+  "exports": "./server.ts",
   
   "tasks": {
     "dev": "deno run --allow-net --allow-read --allow-env --unstable-kv --watch server.ts",
@@ -17,8 +18,7 @@
   
   "compilerOptions": {
     "lib": ["deno.unstable", "deno.window"],
-    "strict": true,
-    "allowJs": true
+    "strict": true
   },
   
   "lint": {

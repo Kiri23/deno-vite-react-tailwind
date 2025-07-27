@@ -1,8 +1,10 @@
+import { Context } from "./Context.ts";
+
 export type Middleware = (
-  req: Request,
+  ctx: Context,
   next: () => Promise<Response>,
 ) => Promise<Response>;
-export type RouteHandler = (req: Request) => Promise<Response>;
+export type RouteHandler = (ctx: Context) => Promise<Response>;
 
 export class Router {
   private routeHandlers: Map<string, RouteHandler> = new Map();
@@ -29,13 +31,12 @@ export class Router {
 
   // Retorna middleware (como Oak)
   routes(): Middleware {
-    return async (req: Request, next: () => Promise<Response>) => {
-      const url = new URL(req.url);
-      const key = `${req.method}:${url.pathname}`;
+    return async (ctx: Context, next: () => Promise<Response>) => {
+      const key = `${ctx.request.method}:${ctx.path}`;
 
       const handler = this.routeHandlers.get(key);
       if (handler) {
-        return await handler(req);
+        return await handler(ctx);
       }
 
       return await next(); // Pasa al siguiente middleware
