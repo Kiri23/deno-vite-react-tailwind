@@ -11,6 +11,13 @@ import {
   errorHandlerMiddleware,
 } from "kiriWebFramework";
 
+// Determine the correct path for static files
+// In development: ./dist (from vite-project/)
+// In production: ./dist (from vite-project/server/)
+// Detect environment and set appropriate path
+const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
+const staticFilesPath = isProduction ? "./dist" : "../dist";
+
 const kv = await Deno.openKv();
 
 // Create app
@@ -103,7 +110,6 @@ router.get("/api/sse", async (req) => {
 // Conditions for middleware routing
 const isApiRoute = (req: Request) => req.url.includes("/api");
 
-
 // Compose middleware with functional routing
 const appMiddleware = compose([
   errorHandlerMiddleware, // 1. Error handling first
@@ -112,7 +118,7 @@ const appMiddleware = compose([
   ifElse(
     isApiRoute,
     router.routes(), // 4a. API routes
-    staticFilesMiddleware("../dist"), // 4b. Static files
+    staticFilesMiddleware(staticFilesPath), // 4b. Static files (works for both dev and prod)
   ),
 ]);
 

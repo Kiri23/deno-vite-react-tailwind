@@ -39,9 +39,22 @@ try {
     );
   }
 
-  // Step 3: Deploy to Deno Deploy
+  // Step 3: Copy dist to server directory for deployment
+  console.log("\n📁 Copying dist to server directory...");
+  const copyCommand = new Deno.Command("cp", {
+    args: ["-r", "./dist", "./server/"],
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+
+  const copyResult = await copyCommand.output();
+  if (!copyResult.success) {
+    throw new Error(`Copy failed with exit code: ${copyResult.code}`);
+  }
+
+  // Step 4: Deploy to Deno Deploy
   console.log("\n🌐 Deploying to Deno Deploy...");
-  console.log(`📍 Entrypoint: jsr:@std/http@1/file-server`);
+  console.log(`📍 Entrypoint: server/server.ts`);
   console.log(`🏷️  Project: ${PROJECT_NAME}`);
 
   const deployCommand = new Deno.Command("deployctl", {
@@ -50,12 +63,10 @@ try {
       "--project",
       PROJECT_NAME,
       "--entrypoint",
-      "jsr:@std/http@1/file-server",
-      "./dist",
+      "server/server.ts",
     ],
     stdout: "inherit",
     stderr: "inherit",
-    cwd: "./dist",
   });
 
   const deployResult = await deployCommand.output();
@@ -69,6 +80,7 @@ try {
     console.log("   - Visit the URL above to see your app");
     console.log("   - Check Deno Deploy dashboard for logs and monitoring");
     console.log("   - Set up custom domain if needed");
+    console.log("   - API endpoints available at /api/counter and /api/sse");
   } else {
     throw new Error(`Deployment failed with exit code: ${deployResult.code}`);
   }

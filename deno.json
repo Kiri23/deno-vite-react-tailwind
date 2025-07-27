@@ -7,7 +7,8 @@
     "deploy": "deno task build && cd dist && deployctl deploy --project=vite-react-tailwind --entrypoint=jsr:@std/http@1/file-server",
     "deploy:custom": "deno task build && cd dist && deployctl deploy --project=$PROJECT_NAME --entrypoint=jsr:@std/http@1/file-server",
     "deploy:script": "deno run --allow-net --allow-read --allow-write --allow-env deploy.ts",
-    "dev:kv": "deno run --allow-net --allow-env --allow-read --allow-write --node-modules-dir npm:vite"
+    "deploy:server": "deno run --allow-net --allow-read --allow-write --allow-env deploy.ts",
+    "dev:server": "deno run --allow-net --allow-read --allow-env --unstable-kv server/server.ts"
   },
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
@@ -24,7 +25,8 @@
     "react-dom": "npm:react-dom@^19.1.0",
     "vite": "npm:vite@^7.0.0",
     "tailwindcss": "npm:tailwindcss@^4.0.0",
-    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.0.0"
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.0.0",
+    "kiriWebFramework": "./server/lib/kiriWebFramework/mod.ts"
   },
   "unstable": ["kv"]
 }
