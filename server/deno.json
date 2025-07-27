@@ -38,5 +38,6 @@
       "semiColons": true,
       "singleQuote": false
     }
-  }
+  },
+  "unstable": ["kv"]
 } 
