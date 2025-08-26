@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import { TanStackDemo } from './components/TanStackDemo.tsx'
+import React, { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import { TanStackDemo } from "./components/TanStackDemo.tsx";
+import { ExpenseTracker } from "./expense-tracker";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
@@ -11,13 +12,29 @@ function App() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center items-center space-x-4 mb-6">
-            <img src="/vite-deno.svg" alt="Vite with Deno" className="h-16 w-16" />
+            <img
+              src="/vite-deno.svg"
+              alt="Vite with Deno"
+              className="h-16 w-16"
+            />
             <div className="flex space-x-2">
-              <a href="https://vite.dev" target="_blank" className="hover:scale-110 transition-transform">
+              <a
+                href="https://vite.dev"
+                target="_blank"
+                className="hover:scale-110 transition-transform"
+              >
                 <img src="/vite.svg" className="h-12 w-12" alt="Vite logo" />
               </a>
-              <a href="https://reactjs.org" target="_blank" className="hover:scale-110 transition-transform">
-                <img src={reactLogo} className="h-12 w-12 animate-spin-slow" alt="React logo" />
+              <a
+                href="https://reactjs.org"
+                target="_blank"
+                className="hover:scale-110 transition-transform"
+              >
+                <img
+                  src={reactLogo}
+                  className="h-12 w-12 animate-spin-slow"
+                  alt="React logo"
+                />
               </a>
             </div>
           </div>
@@ -35,14 +52,18 @@ function App() {
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">
               Interactive Counter
             </h2>
-            <button 
+            <button
               onClick={() => setCount((count) => count + 1)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
             >
               Count: {count}
             </button>
             <p className="mt-4 text-gray-600">
-              Edit <code className="bg-gray-100 px-2 py-1 rounded text-sm">src/App.tsx</code> and save to test HMR
+              Edit{" "}
+              <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                src/App.tsx
+              </code>{" "}
+              and save to test HMR
             </p>
           </div>
         </div>
@@ -55,11 +76,12 @@ function App() {
           <TanStackDemo />
         </div>
 
-        {/* KV Demo Section */}
+        {/* Expense Tracker Section */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <h3 className="text-2xl font-semibold text-gray-800 mb-6">
-            Deno KV Real-time Demo
+            Expense Tracker Demo
           </h3>
+          <ExpenseTracker />
         </div>
 
         {/* Features Section */}
@@ -94,7 +116,9 @@ function App() {
             </div>
             <div className="flex items-center space-x-3 p-3 bg-emerald-50 rounded-lg">
               <span className="text-emerald-600 text-xl">✅</span>
-              <span className="text-gray-700">Deno KV with real-time updates</span>
+              <span className="text-gray-700">
+                Deno KV with real-time updates
+              </span>
             </div>
           </div>
         </div>
@@ -105,30 +129,30 @@ function App() {
             Click on the Vite and React logos to learn more
           </p>
           <div className="flex justify-center space-x-4">
-            <a 
-              href="https://vite.dev" 
-              target="_blank" 
+            <a
+              href="https://vite.dev"
+              target="_blank"
               className="text-blue-600 hover:text-blue-800 underline"
             >
               Vite Docs
             </a>
-            <a 
-              href="https://react.dev" 
-              target="_blank" 
+            <a
+              href="https://react.dev"
+              target="_blank"
               className="text-blue-600 hover:text-blue-800 underline"
             >
               React Docs
             </a>
-            <a 
-              href="https://deno.land" 
-              target="_blank" 
+            <a
+              href="https://deno.land"
+              target="_blank"
               className="text-blue-600 hover:text-blue-800 underline"
             >
               Deno Docs
             </a>
-            <a 
-              href="https://tailwindcss.com" 
-              target="_blank" 
+            <a
+              href="https://tailwindcss.com"
+              target="_blank"
               className="text-blue-600 hover:text-blue-800 underline"
             >
               Tailwind CSS Docs
@@ -137,7 +161,7 @@ function App() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
