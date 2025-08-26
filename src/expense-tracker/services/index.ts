@@ -2,3 +2,4 @@
 
 export * from "./types";
 export { CsvService } from "./CsvService";
+export { AnalysisService } from "./AnalysisService";
