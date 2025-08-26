@@ -1,0 +1,57 @@
+# Cursor Rules for Banking Transaction Statistics Project
+
+## Project Context
+This project is implementing a custom web framework library called "Kiri" while simultaneously using it to build a banking transaction statistics application. The project serves as both a library development environment and a real-world implementation.
+
+## Architecture Overview
+- **Backend**: Deno runtime with custom Kiri web framework
+- **Frontend**: React with TanStack Query for data fetching and state management
+- **Database**: Deno KV for real-time data storage
+- **Real-time**: Server-Sent Events (SSE) for live updates
+
+## Key Components
+
+### Backend (Deno + Kiri Framework)
+- Custom web framework implementation in `/server/lib/kiriWebFramework/`
+- RESTful API endpoints for transaction data
+- Real-time SSE connections for live statistics
+- Deno KV integration for data persistence
+- Middleware system for authentication and validation
+
+### Frontend (React + TanStack Query)
+- TanStack Query for server state management
+- Real-time data synchronization via SSE
+- Transaction statistics dashboard
+- Banking-specific UI components
+- Optimistic updates for better UX
+
+## Development Guidelines
+
+### Library Development
+- The Kiri framework should be developed as a reusable library
+- Maintain clean separation between framework code and application code
+- Follow Deno best practices for module structure
+- Include comprehensive TypeScript types
+
+### Code Organization
+- Keep framework code in `/server/lib/kiriWebFramework/`
+- Application-specific code in `/server/routes/` and `/src/`
+- Shared types and utilities in dedicated modules
+- Clear separation between library API and implementation details
+
+## Technology Stack
+- **Runtime**: Deno
+- **Backend Framework**: Custom Kiri web framework
+- **Frontend**: React + Vite
+- **State Management**: TanStack Query
+- **Database**: Deno KV
+- **Real-time**: Server-Sent Events
+- **Package Manager**: Yarn
+- **Language**: TypeScript
+
+## Development Workflow
+1. Develop framework features in isolation
+2. Integrate features into banking application
+3. Test both library functionality and application features
+4. Iterate based on real-world usage patterns
+5. Maintain backward compatibility for library users
