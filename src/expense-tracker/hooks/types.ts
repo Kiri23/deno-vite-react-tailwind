@@ -7,6 +7,8 @@ import type {
   BalancePoint,
   TypeSummary,
   CsvValidationResult,
+  MonthlyAnalysis,
+  AnalysisOptions,
 } from "../types";
 
 // useExpenseTracker hook return interface
@@ -22,8 +24,20 @@ export interface UseExpenseTrackerReturn {
   isLoading: boolean;
   validationResult: CsvValidationResult | null;
 
+  // Expense Analysis State
+  selectedAnalysisMonth: string | null;
+  analysisOptions: AnalysisOptions;
+  monthlyAnalysis: MonthlyAnalysis | null;
+  availableAnalysisMonths: string[];
+  isAnalysisLoading: boolean;
+  analysisError: string | null;
+
   // Actions
   processCSVFile: (file: File) => Promise<void>;
   toggleCurrentMonth: (show: boolean) => void;
   clearData: () => void;
+
+  // Expense Analysis Actions
+  setSelectedAnalysisMonth: (month: string) => void;
+  setAnalysisOptions: (options: AnalysisOptions) => void;
 }

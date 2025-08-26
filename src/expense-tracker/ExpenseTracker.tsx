@@ -1,6 +1,11 @@
 import React, { useCallback, useMemo, lazy, Suspense } from "react";
 import { useExpenseTracker } from "./hooks";
-import { FileUpload, TransactionTable, MonthlyTextSummary } from "./components";
+import {
+  FileUpload,
+  TransactionTable,
+  MonthlyTextSummary,
+  ExpenseAnalysis,
+} from "./components";
 import type { ValidationError } from "./types";
 
 // Lazy load the ExpenseCharts component for better performance
@@ -352,6 +357,15 @@ export function ExpenseTracker() {
     processCSVFile,
     toggleCurrentMonth,
     clearData,
+    // Expense Analysis
+    selectedAnalysisMonth,
+    analysisOptions,
+    monthlyAnalysis,
+    availableAnalysisMonths,
+    isAnalysisLoading,
+    analysisError,
+    setSelectedAnalysisMonth,
+    setAnalysisOptions,
   } = useExpenseTracker();
 
   const { processingTime, isSlowDevice, startTiming } =
@@ -506,6 +520,10 @@ export function ExpenseTracker() {
                 </h2>
                 <FileUpload
                   onFileProcessed={handleFileProcessed}
+                  onError={(errors) => {
+                    // Errors are handled through the validation result state
+                    console.error("FileUpload errors:", errors);
+                  }}
                   maxFileSize={
                     isSlowDevice ? 10 * 1024 * 1024 : 20 * 1024 * 1024
                   } // Reduce limit for slow devices
@@ -554,6 +572,22 @@ export function ExpenseTracker() {
                         onToggleCurrentMonth={handleToggleCurrentMonth}
                       />
                     </Suspense>
+                  </section>
+                )}
+
+                {/* Expense Analysis Section */}
+                {availableAnalysisMonths.length > 0 && (
+                  <section className="mb-6" aria-labelledby="analysis-heading">
+                    <ExpenseAnalysis
+                      analysis={monthlyAnalysis}
+                      availableMonths={availableAnalysisMonths}
+                      selectedMonth={selectedAnalysisMonth}
+                      onMonthChange={setSelectedAnalysisMonth}
+                      analysisOptions={analysisOptions}
+                      onOptionsChange={setAnalysisOptions}
+                      isLoading={isAnalysisLoading}
+                      error={analysisError}
+                    />
                   </section>
                 )}
 

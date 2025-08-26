@@ -8,6 +8,8 @@ import type {
   TypeSummary,
   CsvValidationResult,
   ValidationError,
+  MonthlyAnalysis,
+  AnalysisOptions,
 } from "../types";
 
 // Main container component props
@@ -40,4 +42,14 @@ export interface ExpenseChartsProps {
 // Monthly text summary component props
 export interface MonthlyTextSummaryProps {
   summaries: string[];
+}
+
+// Expense analysis component props
+export interface ExpenseAnalysisProps {
+  transactions: TransactionData[];
+  monthlyData: MonthlyData[];
+  selectedMonth?: string; // YYYY-MM format, default: último mes completo
+  analysisOptions: AnalysisOptions;
+  onMonthSelect: (month: string) => void;
+  onOptionsChange: (options: AnalysisOptions) => void;
 }

@@ -5,3 +5,4 @@ export { FileUpload } from "./FileUpload";
 export { TransactionTable } from "./TransactionTable";
 export { ExpenseCharts } from "./ExpenseCharts";
 export { MonthlyTextSummary } from "./MonthlyTextSummary";
+export { ExpenseAnalysis } from "./ExpenseAnalysis";

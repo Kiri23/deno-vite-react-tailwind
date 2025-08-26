@@ -1,5 +1,10 @@
-import { useState, useCallback } from "react";
-import { CsvService, AnalysisService, VizService } from "../services";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import {
+  CsvService,
+  AnalysisService,
+  VizService,
+  ExpenseAnalysisService,
+} from "../services";
 import type { UseExpenseTrackerReturn } from "./types";
 import type {
   TransactionData,
@@ -9,6 +14,8 @@ import type {
   TypeSummary,
   CsvValidationResult,
   ValidationError,
+  MonthlyAnalysis,
+  AnalysisOptions,
 } from "../types";
 
 /**
@@ -193,6 +200,12 @@ function categorizeValidationIssues(result: CsvValidationResult): {
  * Enhanced with detailed error handling and user feedback
  */
 export function useExpenseTracker(): UseExpenseTrackerReturn {
+  // Service instances
+  const expenseAnalysisService = useMemo(
+    () => new ExpenseAnalysisService(),
+    []
+  );
+
   // Core data state
   const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
@@ -207,6 +220,65 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
   const [validationResult, setValidationResult] =
     useState<CsvValidationResult | null>(null);
 
+  // Expense Analysis state
+  const [selectedAnalysisMonth, setSelectedAnalysisMonth] = useState<
+    string | null
+  >(null);
+  const [analysisOptions, setAnalysisOptions] = useState<AnalysisOptions>({
+    includeTransfers: false,
+    includeRoundups: false,
+    includePending: false,
+  });
+  const [monthlyAnalysis, setMonthlyAnalysis] =
+    useState<MonthlyAnalysis | null>(null);
+  const [isAnalysisLoading, setIsAnalysisLoading] = useState<boolean>(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  // Computed values for expense analysis
+  const availableAnalysisMonths = useMemo(() => {
+    return expenseAnalysisService.getAvailableMonths(transactions, false);
+  }, [transactions, expenseAnalysisService]);
+
+  // Auto-select default analysis month when transactions change
+  useEffect(() => {
+    if (transactions.length > 0 && !selectedAnalysisMonth) {
+      const defaultMonth =
+        expenseAnalysisService.getDefaultAnalysisMonth(transactions);
+      setSelectedAnalysisMonth(defaultMonth);
+    }
+  }, [transactions, selectedAnalysisMonth, expenseAnalysisService]);
+
+  // Generate monthly analysis when month or options change
+  useEffect(() => {
+    if (selectedAnalysisMonth && transactions.length > 0) {
+      setIsAnalysisLoading(true);
+      setAnalysisError(null);
+
+      try {
+        const analysis = expenseAnalysisService.analyzeMonth(
+          transactions,
+          selectedAnalysisMonth,
+          analysisOptions
+        );
+        setMonthlyAnalysis(analysis);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Error desconocido";
+        setAnalysisError(`Error al generar análisis: ${errorMessage}`);
+        setMonthlyAnalysis(null);
+      } finally {
+        setIsAnalysisLoading(false);
+      }
+    } else {
+      setMonthlyAnalysis(null);
+    }
+  }, [
+    selectedAnalysisMonth,
+    analysisOptions,
+    transactions,
+    expenseAnalysisService,
+  ]);
+
   /**
    * Helper function to clear all data state
    */
@@ -217,6 +289,11 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
     setBalanceHistory([]);
     setTypeBreakdown([]);
     setTextualSummaries([]);
+
+    // Clear analysis state
+    setSelectedAnalysisMonth(null);
+    setMonthlyAnalysis(null);
+    setAnalysisError(null);
   }, []);
 
   /**
@@ -383,9 +460,21 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
     isLoading,
     validationResult,
 
+    // Expense Analysis State
+    selectedAnalysisMonth,
+    analysisOptions,
+    monthlyAnalysis,
+    availableAnalysisMonths,
+    isAnalysisLoading,
+    analysisError,
+
     // Actions
     processCSVFile,
     toggleCurrentMonth,
     clearData,
+
+    // Expense Analysis Actions
+    setSelectedAnalysisMonth,
+    setAnalysisOptions,
   };
 }

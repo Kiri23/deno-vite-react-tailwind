@@ -99,3 +99,63 @@ export interface CsvValidationResult {
     balanceSource: "original" | "calculated";
   };
 }
+
+// Detailed expense analysis types
+export interface AnalysisOptions {
+  includeTransfers?: boolean; // Default: false
+  includeRoundups?: boolean; // Default: false
+  includePending?: boolean; // Default: false
+}
+
+export interface TopExpense {
+  date: string; // YYYY-MM-DD (fecha absoluta)
+  description: string;
+  type: string; // Tipo normalizado
+  amount: number; // Always negative for expenses
+  rank: number; // 1-10
+}
+
+export interface DailySpending {
+  date: string; // YYYY-MM-DD
+  day: number; // 1-31 (día del mes)
+  totalExpenses: number; // 0 si no hay gastos ese día
+  transactionCount: number;
+  largestExpense?: {
+    description: string;
+    amount: number;
+  };
+}
+
+export interface ExpenseByType {
+  type: string; // Tipo normalizado (Debit Card, etc.)
+  totalAmount: number; // Monto total (negativo)
+  transactionCount: number;
+  percentage: number; // Porcentaje sobre total de egresos del mes
+  averageAmount: number;
+}
+
+export interface MonthlyAnalysis {
+  month: string; // YYYY-MM format
+  isCurrentMonth: boolean; // Para mostrar badge "mes incompleto"
+  topExpenses: TopExpense[]; // Top-10, solo egresos
+  expensesByType: ExpenseByType[]; // Desglose por tipo normalizado
+  dailySpending: DailySpending[]; // Patrón diario (1..28/29/30/31)
+  insights: {
+    largestExpense: {
+      description: string;
+      amount: number;
+      date: string;
+    };
+    highestTypePercentage: {
+      type: string;
+      percentage: number;
+    };
+    highestSpendingDay: {
+      date: string; // YYYY-MM-DD
+      amount: number;
+    };
+    totalExpenses: number;
+    averageDailySpending: number;
+  };
+  appliedOptions: AnalysisOptions; // Filtros aplicados
+}
