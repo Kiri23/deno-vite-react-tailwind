@@ -1,4 +1,5 @@
 // Test setup file for Vitest
+import "@testing-library/jest-dom";
 
 // Mock FileReader for testing
 global.FileReader = class MockFileReader {
