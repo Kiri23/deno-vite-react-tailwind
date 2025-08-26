@@ -1,9 +1,4 @@
-import React, {
-  useCallback,
-  useMemo,
-  lazy,
-  Suspense,
-} from "react";
+import React, { useCallback, useMemo, lazy, Suspense } from "react";
 import { useExpenseTracker } from "./hooks";
 import { FileUpload, TransactionTable, MonthlyTextSummary } from "./components";
 import type { ValidationError } from "./types";
@@ -381,9 +376,17 @@ export function ExpenseTracker() {
   // Memoized handlers to prevent unnecessary re-renders
   const handleFileProcessed = useCallback(
     async (file: File) => {
+      console.log(
+        "ExpenseTracker.handleFileProcessed: Starting with file:",
+        file.name,
+        file.size
+      );
       const endTiming = startTiming();
       try {
         await processCSVFile(file);
+        console.log(
+          "ExpenseTracker.handleFileProcessed: processCSVFile completed successfully"
+        );
       } finally {
         endTiming();
       }

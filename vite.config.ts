@@ -1,10 +1,19 @@
 import { defineConfig } from "vite";
-import deno from "@deno/vite-plugin";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  // @ts-ignore - Plugin compatibility issue between Vite versions
-  plugins: [deno(), react(), tailwindcss()],
+  plugins: [react(), tailwindcss()],
+  optimizeDeps: {
+    exclude: ["nodejs-polars"],
+  },
+  define: {
+    global: "globalThis",
+  },
+  server: {
+    fs: {
+      allow: [".."],
+    },
+  },
 });

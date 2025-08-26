@@ -59,170 +59,41 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const processFile = useCallback(
     async (file: File) => {
+      console.log(
+        "FileUpload.processFile: Starting with file:",
+        file.name,
+        file.size
+      );
       const validationErrors = validateFile(file);
       if (validationErrors.length > 0) {
+        console.log(
+          "FileUpload.processFile: Validation errors:",
+          validationErrors
+        );
         onError(validationErrors);
         return;
       }
 
       setIsProcessing(true);
-      setProcessingStatus("Leyendo archivo...");
+      setProcessingStatus("Procesando archivo...");
 
       try {
-        // Read file content
-        const text = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.onerror = () => reject(new Error("Error al leer el archivo"));
-          reader.readAsText(file);
-        });
-
-        setProcessingStatus("Validando formato CSV...");
-
-        // Basic CSV validation - check if it has content
-        if (!text.trim()) {
-          onError([
-            {
-              type: "missing_columns",
-              message: "El archivo CSV está vacío",
-              examples: [
-                "Selecciona un archivo que contenga datos de transacciones",
-              ],
-            },
-          ]);
-          return;
-        }
-
-        // Parse CSV headers to check required columns
-        const lines = text.trim().split("\n");
-        if (lines.length < 2) {
-          onError([
-            {
-              type: "missing_columns",
-              message:
-                "El archivo CSV debe contener al menos una fila de encabezados y una fila de datos",
-              examples: ["Verifica que el archivo tenga el formato correcto"],
-            },
-          ]);
-          return;
-        }
-
-        const headers = lines[0]
-          .split(",")
-          .map((h) => h.trim().replace(/"/g, ""));
-        const requiredColumns = [
-          "Date",
-          "Description",
-          "Type",
-          "Amount",
-          "Current balance",
-          "Status",
-        ];
-        const missingColumns = requiredColumns.filter(
-          (col) =>
-            !headers.some(
-              (header) => header.toLowerCase() === col.toLowerCase()
-            )
+        console.log(
+          "FileUpload.processFile: Calling onFileProcessed with file"
         );
-
-        if (missingColumns.length > 0) {
-          onError([
-            {
-              type: "missing_columns",
-              message: `Faltan columnas requeridas: ${missingColumns.join(
-                ", "
-              )}`,
-              examples: [
-                `Columnas encontradas: ${headers.join(", ")}`,
-                `Columnas requeridas: ${requiredColumns.join(", ")}`,
-              ],
-            },
-          ]);
-          return;
-        }
-
-        setProcessingStatus("Procesando transacciones...");
-
-        // Parse CSV data (simplified parsing for now)
-        const transactions: any[] = [];
-        for (let i = 1; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (!line) continue;
-
-          const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
-          if (values.length !== headers.length) continue;
-
-          const transaction: any = {};
-          headers.forEach((header, index) => {
-            transaction[header] = values[index];
-          });
-
-          // Basic validation
-          if (!transaction.Date || !transaction.Amount) continue;
-
-          // Convert amount to number
-          const amount = parseFloat(transaction.Amount);
-          if (isNaN(amount)) continue;
-
-          transaction.Amount = amount;
-
-          // Convert balance to number
-          const balance = parseFloat(transaction["Current balance"]);
-          if (!isNaN(balance)) {
-            transaction["Current balance"] = balance;
-          }
-
-          transactions.push(transaction);
-        }
-
-        if (transactions.length === 0) {
-          onError([
-            {
-              type: "invalid_amount",
-              message: "No se encontraron transacciones válidas en el archivo",
-              examples: [
-                "Verifica que las columnas Date y Amount contengan datos válidos",
-              ],
-            },
-          ]);
-          return;
-        }
-
-        setProcessingStatus("Finalizando...");
-
-        // Calculate date range
-        const dates = transactions
-          .map((t) => new Date(t.Date))
-          .filter((d) => !isNaN(d.getTime()))
-          .sort((a, b) => a.getTime() - b.getTime());
-
-        const dateRange =
-          dates.length > 0
-            ? {
-                start: dates[0].toISOString().split("T")[0],
-                end: dates[dates.length - 1].toISOString().split("T")[0],
-              }
-            : { start: "", end: "" };
-
-        // Create validation result
-        const result = {
-          isValid: true,
-          transactions,
-          errors: [],
-          warnings: [],
-          metadata: {
-            rowCount: transactions.length,
-            dateRange,
-            balanceSource: "original" as const,
-          },
-        };
-
-        onFileProcessed(result);
+        await onFileProcessed(file);
+        console.log(
+          "FileUpload.processFile: onFileProcessed completed successfully"
+        );
       } catch (error) {
+        console.error(
+          "FileUpload.processFile: Error from onFileProcessed:",
+          error
+        );
         onError([
           {
             type: "missing_columns",
-            message: `Error al procesar el archivo CSV: ${
+            message: `Error al procesar el archivo: ${
               error instanceof Error ? error.message : "Error desconocido"
             }`,
             examples: ["Verifica que el archivo tenga el formato CSV correcto"],

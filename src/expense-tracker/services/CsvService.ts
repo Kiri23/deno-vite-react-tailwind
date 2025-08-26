@@ -1,4 +1,3 @@
-import pl from "nodejs-polars";
 import type {
   RawTransaction,
   TransactionData,
@@ -56,22 +55,31 @@ export class CsvService {
    * Reads file content using FileReader API
    */
   private static readFileAsText(file: File): Promise<string> {
+    console.log("readFileAsText: Starting to read file");
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
       reader.onload = (event) => {
+        console.log("readFileAsText: File read completed");
         const text = event.target?.result as string;
+        console.log("readFileAsText: Text type:", typeof text);
+        console.log("readFileAsText: Text length:", text?.length || 0);
+
         if (!text || text.trim().length === 0) {
+          console.error("readFileAsText: File is empty");
           reject(new Error("El archivo CSV está vacío"));
           return;
         }
+        console.log("readFileAsText: Resolving with text");
         resolve(text);
       };
 
-      reader.onerror = () => {
+      reader.onerror = (error) => {
+        console.error("readFileAsText: Error reading file:", error);
         reject(new Error("Error al leer el archivo"));
       };
 
+      console.log("readFileAsText: Starting FileReader.readAsText");
       reader.readAsText(file);
     });
   }
@@ -105,34 +113,105 @@ export class CsvService {
   }
 
   /**
-   * Basic CSV parsing without Polars (for initial validation)
+   * Basic CSV parsing with proper handling of quoted fields
    */
   private static parseCSVBasic(csvText: string): {
     headers: string[];
     rows: string[][];
   } {
+    console.log("parseCSVBasic: Starting CSV parsing");
+    console.log("CSV text length:", csvText.length);
+    console.log("First 200 characters:", csvText.substring(0, 200));
+
     const lines = csvText.trim().split("\n");
-    if (lines.length < 2) {
+    console.log("Number of lines:", lines.length);
+
+    if (lines.length < 1) {
       throw new Error(
-        "El archivo CSV debe contener al menos una fila de encabezados y una fila de datos"
+        "El archivo CSV debe contener al menos una fila de encabezados"
       );
     }
 
-    const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""));
-    const rows = lines
-      .slice(1)
-      .map((line) =>
-        line.split(",").map((cell) => cell.trim().replace(/"/g, ""))
+    // Parse CSV line with proper quote handling
+    const parseLine = (line: string): string[] => {
+      console.log("parseLine: Processing line:", line);
+      const result: string[] = [];
+      let current = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            // Escaped quote
+            current += '"';
+            i++; // Skip next quote
+          } else {
+            // Toggle quote state
+            inQuotes = !inQuotes;
+          }
+        } else if (char === "," && !inQuotes) {
+          // Field separator
+          result.push(current.trim());
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+
+      // Add last field
+      result.push(current.trim());
+
+      console.log("parseLine: Result:", result);
+      console.log(
+        "parseLine: Result types:",
+        result.map((r) => typeof r)
       );
+      return result;
+    };
+
+    console.log("About to parse first line:", lines[0]);
+    const headers = parseLine(lines[0]);
+    console.log("Parsed headers:", headers);
+    console.log("Headers length:", headers.length);
+    console.log(
+      "Headers types:",
+      headers.map((h) => typeof h)
+    );
+    console.log(
+      "Headers detailed:",
+      headers.map((h, i) => `[${i}]: "${h}" (${typeof h})`)
+    );
+
+    const rows =
+      lines.length > 1
+        ? lines.slice(1).map((line, index) => {
+            try {
+              return parseLine(line);
+            } catch (error) {
+              console.error(`Error parsing line ${index + 2}:`, line);
+              throw error;
+            }
+          })
+        : [];
+
+    console.log("Parsed rows count:", rows.length);
+    if (rows.length > 0) {
+      console.log("First row:", rows[0]);
+      console.log(
+        "First row types:",
+        rows[0].map((cell) => typeof cell)
+      );
+    }
 
     return { headers, rows };
   }
 
   /**
-   * Parse CSV using Polars.js with robust error handling
+   * Parse CSV using native JavaScript with robust error handling
    */
-  private static parseCSVWithPolars(csvText: string): {
-    dataFrame: pl.DataFrame;
+  private static parseCSVWithJS(csvText: string): {
     transactions: RawTransaction[];
     errors: ValidationError[];
     warnings: string[];
@@ -141,16 +220,11 @@ export class CsvService {
     const warnings: string[] = [];
 
     try {
-      // Parse CSV with Polars
-      const dataFrame = pl.readCSV(csvText, {
-        hasHeader: true,
-        ignoreErrors: false,
-        tryParseDate: false, // We'll handle date parsing manually for better control
-      });
+      // Parse CSV with basic JavaScript
+      const { headers, rows } = this.parseCSVBasic(csvText);
 
-      // Get column names and normalize them
-      const columns = dataFrame.columns;
-      const columnMap = this.createColumnMap(columns);
+      // Create column mapping
+      const columnMap = this.createColumnMap(headers);
 
       // Validate that all required columns are present
       const missingColumns: string[] = [];
@@ -166,26 +240,27 @@ export class CsvService {
           message: `Faltan columnas requeridas: ${missingColumns.join(", ")}`,
           examples: missingColumns,
         });
-        return { dataFrame, transactions: [], errors, warnings };
+        return { transactions: [], errors, warnings };
       }
 
-      // Convert DataFrame to RawTransaction objects with validation
-      const transactions = this.convertDataFrameToTransactions(
-        dataFrame,
+      // Convert rows to RawTransaction objects with validation
+      const transactions = this.convertRowsToTransactions(
+        headers,
+        rows,
         columnMap,
         errors,
         warnings
       );
 
-      return { dataFrame, transactions, errors, warnings };
+      return { transactions, errors, warnings };
     } catch (error) {
       errors.push({
         type: "missing_columns", // Generic error type
-        message: `Error al parsear CSV con Polars: ${
+        message: `Error al procesar el archivo CSV: ${
           error instanceof Error ? error.message : "Error desconocido"
         }`,
       });
-      return { dataFrame: pl.DataFrame(), transactions: [], errors, warnings };
+      return { transactions: [], errors, warnings };
     }
   }
 
@@ -196,52 +271,115 @@ export class CsvService {
     const columnMap: Record<string, string> = {};
 
     for (const col of columns) {
-      const normalized = col.trim().toLowerCase().replace(/"/g, "");
-      columnMap[normalized] = col;
+      if (col && typeof col === "string") {
+        const normalized = col.trim().toLowerCase().replace(/"/g, "");
+        columnMap[normalized] = col;
+      }
     }
 
     return columnMap;
   }
 
   /**
-   * Convert Polars DataFrame to RawTransaction array with validation
+   * Convert CSV rows to RawTransaction array with validation
    */
-  private static convertDataFrameToTransactions(
-    dataFrame: pl.DataFrame,
+  private static convertRowsToTransactions(
+    headers: string[],
+    rows: string[][],
     columnMap: Record<string, string>,
     errors: ValidationError[],
     warnings: string[]
   ): RawTransaction[] {
+    console.log("convertRowsToTransactions: Starting conversion");
+    console.log("Headers received:", headers);
+    console.log(
+      "Headers types:",
+      headers.map((h) => typeof h)
+    );
+    console.log("Column map:", columnMap);
+
     const transactions: RawTransaction[] = [];
-    const rowCount = dataFrame.height;
 
-    // Get actual column names
-    const dateCol = columnMap["date"];
-    const descCol = columnMap["description"];
-    const typeCol = columnMap["type"];
-    const amountCol = columnMap["amount"];
-    const balanceCol = columnMap["current balance"];
-    const statusCol = columnMap["status"];
+    // Get column indices with better error handling
+    console.log("Looking for column indices...");
 
-    // Extract data as arrays for efficient processing
-    const dates = dataFrame.getColumn(dateCol).toArray();
-    const descriptions = dataFrame.getColumn(descCol).toArray();
-    const types = dataFrame.getColumn(typeCol).toArray();
-    const amounts = dataFrame.getColumn(amountCol).toArray();
-    const balances = dataFrame.getColumn(balanceCol).toArray();
-    const statuses = dataFrame.getColumn(statusCol).toArray();
+    const dateIdx = headers.findIndex((h) => {
+      console.log(`Checking header for date: "${h}" (type: ${typeof h})`);
+      return h && typeof h === "string" && h.toLowerCase().trim() === "date";
+    });
+    console.log("Date index:", dateIdx);
+
+    const descIdx = headers.findIndex((h) => {
+      return (
+        h && typeof h === "string" && h.toLowerCase().trim() === "description"
+      );
+    });
+    console.log("Description index:", descIdx);
+
+    const typeIdx = headers.findIndex((h) => {
+      return h && typeof h === "string" && h.toLowerCase().trim() === "type";
+    });
+    console.log("Type index:", typeIdx);
+
+    const amountIdx = headers.findIndex((h) => {
+      return h && typeof h === "string" && h.toLowerCase().trim() === "amount";
+    });
+    console.log("Amount index:", amountIdx);
+
+    const balanceIdx = headers.findIndex((h) => {
+      return (
+        h &&
+        typeof h === "string" &&
+        h.toLowerCase().trim() === "current balance"
+      );
+    });
+    console.log("Balance index:", balanceIdx);
+    const statusIdx = headers.findIndex((h) => {
+      console.log(`Checking header for status: "${h}" (type: ${typeof h})`);
+      return h && typeof h === "string" && h.toLowerCase().trim() === "status";
+    });
+    console.log("Status index:", statusIdx);
+
+    // Validate that all required columns were found
+    if (
+      dateIdx === -1 ||
+      descIdx === -1 ||
+      typeIdx === -1 ||
+      amountIdx === -1 ||
+      balanceIdx === -1 ||
+      statusIdx === -1
+    ) {
+      const missingColumns = [];
+      if (dateIdx === -1) missingColumns.push("Date");
+      if (descIdx === -1) missingColumns.push("Description");
+      if (typeIdx === -1) missingColumns.push("Type");
+      if (amountIdx === -1) missingColumns.push("Amount");
+      if (balanceIdx === -1) missingColumns.push("Current balance");
+      if (statusIdx === -1) missingColumns.push("Status");
+
+      errors.push({
+        type: "missing_columns",
+        message: `Faltan columnas requeridas: ${missingColumns.join(
+          ", "
+        )}. Columnas encontradas: ${headers.join(", ")}`,
+        examples: missingColumns,
+      });
+      return [];
+    }
 
     const invalidDateRows: number[] = [];
     const invalidAmountRows: number[] = [];
 
-    for (let i = 0; i < rowCount; i++) {
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+
       try {
-        const date = String(dates[i] || "").trim();
-        const description = String(descriptions[i] || "").trim();
-        const type = String(types[i] || "").trim();
-        const amountStr = String(amounts[i] || "").trim();
-        const balanceStr = String(balances[i] || "").trim();
-        const status = String(statuses[i] || "").trim();
+        const date = (row[dateIdx] || "").trim();
+        const description = (row[descIdx] || "").trim();
+        const type = (row[typeIdx] || "").trim();
+        const amountStr = (row[amountIdx] || "").trim();
+        const balanceStr = (row[balanceIdx] || "").trim();
+        const status = (row[statusIdx] || "").trim();
 
         // Validate and convert amount
         let amount: number;
@@ -366,10 +504,16 @@ export class CsvService {
    * Main validation and parsing method (Task 2.1 implementation)
    */
   static async validateAndParse(file: File): Promise<CsvValidationResult> {
+    console.log("validateAndParse: Starting validation for file:", file.name);
+    console.log("File size:", file.size, "bytes");
+    console.log("File type:", file.type);
+
     try {
       // Step 1: Basic file validation
+      console.log("Step 1: Validating file...");
       const fileErrors = this.validateFile(file);
       if (fileErrors.length > 0) {
+        console.log("File validation errors:", fileErrors);
         return {
           isValid: false,
           errors: fileErrors,
@@ -382,15 +526,16 @@ export class CsvService {
       }
 
       // Step 2: Read file content
+      console.log("Step 2: Reading file content...");
       const csvText = await this.readFileAsText(file);
+      console.log("File content read successfully, length:", csvText.length);
 
-      // Step 3: Parse CSV with Polars.js (Task 2.2 implementation)
+      // Step 3: Parse CSV with JavaScript (Task 2.2 implementation)
       const {
-        dataFrame,
         transactions,
         errors: parseErrors,
         warnings,
-      } = this.parseCSVWithPolars(csvText);
+      } = this.parseCSVWithJS(csvText);
 
       // Step 4: Check for parsing errors
       if (parseErrors.length > 0) {

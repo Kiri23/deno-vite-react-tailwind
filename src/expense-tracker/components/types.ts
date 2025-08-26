@@ -15,7 +15,7 @@ export interface ExpenseTrackerProps {}
 
 // File upload component props
 export interface FileUploadProps {
-  onFileProcessed: (result: CsvValidationResult) => void;
+  onFileProcessed: (file: File) => void;
   onError: (errors: ValidationError[]) => void;
   maxFileSize: number; // 20MB limit
 }
