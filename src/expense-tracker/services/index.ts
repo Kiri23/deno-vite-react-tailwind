@@ -3,3 +3,4 @@
 export * from "./types";
 export { CsvService } from "./CsvService";
 export { AnalysisService } from "./AnalysisService";
+export { VizService } from "./VizService";
