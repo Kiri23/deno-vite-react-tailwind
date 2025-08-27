@@ -1,0 +1,109 @@
+name: Currency Format Enforcement
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  currency-format-check:
+    name: Currency Format Enforcement
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Install ripgrep (for faster pattern matching)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ripgrep
+
+      - name: Check currency formatting compliance
+        run: |
+          cd vite-project
+          deno task check:currency
+        env:
+          # Ensure consistent behavior across CI environments
+          DENO_NO_PROMPT: 1
+
+      - name: Run currency formatting contract tests
+        run: |
+          cd vite-project
+          # Run specific tests that validate currency formatting standards
+          deno run -A --node-modules-dir npm:vitest run --reporter=verbose src/utils/formatting/__tests__/currency.test.ts
+        env:
+          NODE_ENV: test
+          TZ: America/New_York
+
+      - name: Validate no Unicode minus signs in snapshots
+        run: |
+          cd vite-project
+          # Check for Unicode minus signs in test files and snapshots
+          if grep -r "−" src/**/__tests__/ 2>/dev/null; then
+            echo "❌ Found Unicode minus signs (−, U+2212) in test files"
+            echo "Replace with ASCII hyphen-minus (-, U+002D) per foundation.md"
+            exit 1
+          else
+            echo "✅ No Unicode minus signs found in test files"
+          fi
+
+      - name: Check for prohibited patterns in source code
+        run: |
+          cd vite-project
+          echo "🔍 Checking for prohibited currency formatting patterns..."
+
+          # Check for Intl.NumberFormat outside allowed files
+          if rg -q "Intl\.NumberFormat" src --glob '!utils/formatting/currency.*' --glob '!**/__tests__/**'; then
+            echo "❌ Found prohibited Intl.NumberFormat usage outside utils/formatting/currency.ts"
+            rg -n "Intl\.NumberFormat" src --glob '!utils/formatting/currency.*' --glob '!**/__tests__/**'
+            echo "💡 Use formatCurrency from utils/formatting/currency.ts instead"
+            exit 1
+          fi
+
+          # Check for .toFixed() in components/services
+          if rg -q "\.toFixed\(" src/components src/services 2>/dev/null; then
+            echo "❌ Found .toFixed() usage in components/services"
+            rg -n "\.toFixed\(" src/components src/services
+            echo "💡 Use formatCurrency from utils/formatting/currency.ts for currency values"
+            exit 1
+          fi
+
+          # Check for local formatCurrency functions
+          if rg -q "format.*Currency" src --glob '!utils/formatting/currency.*' --glob '!**/__tests__/**'; then
+            echo "❌ Found local formatCurrency functions outside utils/formatting/currency.ts"
+            rg -n "format.*Currency" src --glob '!utils/formatting/currency.*' --glob '!**/__tests__/**'
+            echo "💡 Import formatCurrency from utils/formatting/currency.ts instead"
+            exit 1
+          fi
+
+          echo "✅ All currency formatting patterns are compliant"
+
+      - name: Generate enforcement report
+        if: failure()
+        run: |
+          cd vite-project
+          echo "📋 Currency Formatting Enforcement Report"
+          echo "========================================"
+          echo ""
+          echo "❌ Currency formatting violations detected in CI"
+          echo ""
+          echo "🔧 How to fix:"
+          echo "1. Run 'deno task check:currency' locally to see detailed violations"
+          echo "2. Run 'deno task fix:currency' for migration assistance"
+          echo "3. Import formatCurrency from utils/formatting/currency.ts"
+          echo "4. Replace local formatters with the centralized utility"
+          echo "5. Update test expectations to use ASCII hyphen-minus (-, U+002D)"
+          echo ""
+          echo "📚 References:"
+          echo "• Standards: foundation.md"
+          echo "• Design: .kiro/specs/currency-formatting-fix/design.md"
+          echo "• Utility: utils/formatting/currency.ts"
+          echo ""
+          echo "This check ensures compliance with foundation.md currency formatting standards."

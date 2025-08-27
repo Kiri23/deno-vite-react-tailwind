@@ -143,8 +143,8 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
             const dayIndex = context.dataIndex;
             const dayData = filteredAnalysis?.dailySpending[dayIndex];
             const transactionCount = dayData?.transactionCount || 0;
-            return `Gastos: ${value.toFixed(
-              2
+            return `Gastos: ${formatCurrency(
+              value
             )} (${transactionCount} transacciones)`;
           },
         },
