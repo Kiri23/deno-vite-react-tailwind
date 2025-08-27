@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { formatCurrency } from "../../utils/formatting/currency";
 import type { TransactionTableProps, TransactionData } from "./types";
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
@@ -22,9 +23,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   };
 
   const formatAmount = (amount: number) => {
-    const sign = amount >= 0 ? "+" : "−"; // Using minus sign (−) instead of hyphen (-)
-    const absAmount = Math.abs(amount);
-    return `${sign}$${absAmount.toFixed(2)}`;
+    return formatCurrency(amount, { showPlus: amount >= 0 });
   };
 
   const formatDate = (dateString: string) => {
@@ -41,7 +40,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   };
 
   const formatBalance = (balance: number) => {
-    return `$${balance.toFixed(2)}`;
+    return formatCurrency(balance);
   };
 
   if (transactions.length === 0) {
@@ -206,7 +205,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               className="font-semibold text-green-600"
               aria-label={`Ingresos totales: ${summary.totalIncome} dólares`}
             >
-              +${summary.totalIncome.toFixed(2)}
+              {formatCurrency(summary.totalIncome, { showPlus: true })}
             </span>
           </div>
           <div className="flex justify-between">
@@ -217,7 +216,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 summary.totalExpenses
               )} dólares`}
             >
-              −${Math.abs(summary.totalExpenses).toFixed(2)}
+              {formatCurrency(summary.totalExpenses)}
             </span>
           </div>
           <div className="flex justify-between">

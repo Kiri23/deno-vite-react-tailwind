@@ -13,27 +13,19 @@ vi.mock("../../services", () => ({
   CsvService: {
     validateAndParse: vi.fn(),
   },
-  AnalysisService: vi.fn().mockImplementation(() => ({
-    calculateMonthlySummary: vi.fn(),
-    calculateOverallSummary: vi.fn(),
-    generateBalanceHistory: vi.fn(),
-    groupByTransactionType: vi.fn(),
-  })),
-  VizService: vi.fn().mockImplementation(() => ({
-    generateTextualSummary: vi.fn(),
-  })),
+  AnalysisService: vi.fn(),
+  VizService: vi.fn(),
   ExpenseAnalysisService: vi.fn().mockImplementation(() => ({
-    analyzeMonth: vi.fn(),
-    getAvailableMonths: vi.fn(),
-    getDefaultAnalysisMonth: vi.fn(),
+    getAvailableMonths: vi.fn().mockReturnValue([]),
+    getDefaultAnalysisMonth: vi.fn().mockReturnValue(null),
+    analyzeMonth: vi.fn().mockReturnValue(null),
   })),
 }));
 
 describe("useExpenseTracker", () => {
   const mockCsvService = CsvService as any;
-  const mockAnalysisService = AnalysisService as any;
-  const mockVizService = VizService as any;
-  const mockExpenseAnalysisService = ExpenseAnalysisService as any;
+  const mockAnalysisService = vi.mocked(AnalysisService);
+  const mockVizService = vi.mocked(VizService);
 
   // Mock data
   const mockTransactions = [
@@ -139,6 +131,9 @@ describe("useExpenseTracker", () => {
 
       const mockVizInstance = {
         generateTextualSummary: vi.fn().mockReturnValue(mockTextualSummaries),
+        prepareMonthlyChartData: vi.fn().mockReturnValue([]),
+        prepareBalanceChartData: vi.fn().mockReturnValue([]),
+        prepareTypeChartData: vi.fn().mockReturnValue([]),
       };
       mockVizService.mockImplementation(() => mockVizInstance);
 
@@ -312,6 +307,9 @@ describe("useExpenseTracker", () => {
 
       const mockVizInstance = {
         generateTextualSummary: vi.fn().mockReturnValue(mockTextualSummaries),
+        prepareMonthlyChartData: vi.fn().mockReturnValue([]),
+        prepareBalanceChartData: vi.fn().mockReturnValue([]),
+        prepareTypeChartData: vi.fn().mockReturnValue([]),
       };
       mockVizService.mockImplementation(() => mockVizInstance);
 
@@ -385,6 +383,9 @@ describe("useExpenseTracker", () => {
 
       const mockVizInstance = {
         generateTextualSummary: vi.fn().mockReturnValue(mockTextualSummaries),
+        prepareMonthlyChartData: vi.fn().mockReturnValue([]),
+        prepareBalanceChartData: vi.fn().mockReturnValue([]),
+        prepareTypeChartData: vi.fn().mockReturnValue([]),
       };
       mockVizService.mockImplementation(() => mockVizInstance);
 
@@ -441,6 +442,9 @@ describe("useExpenseTracker", () => {
 
       const mockVizInstance = {
         generateTextualSummary: vi.fn().mockReturnValue(mockTextualSummaries),
+        prepareMonthlyChartData: vi.fn().mockReturnValue([]),
+        prepareBalanceChartData: vi.fn().mockReturnValue([]),
+        prepareTypeChartData: vi.fn().mockReturnValue([]),
       };
       mockVizService.mockImplementation(() => mockVizInstance);
 

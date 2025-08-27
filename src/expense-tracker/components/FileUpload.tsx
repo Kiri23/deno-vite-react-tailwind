@@ -75,7 +75,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       }
 
       setIsProcessing(true);
-      setProcessingStatus("Procesando archivo...");
+      setProcessingStatus("Leyendo archivo...");
 
       try {
         console.log(

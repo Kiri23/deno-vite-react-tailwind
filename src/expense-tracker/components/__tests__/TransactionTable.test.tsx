@@ -121,7 +121,7 @@ describe("TransactionTable", () => {
     render(<TransactionTable {...defaultProps} />);
 
     // Check expense (negative amount) - use getAllByText since amount appears in table and summary
-    const expenseAmounts = screen.getAllByText("−$50.00");
+    const expenseAmounts = screen.getAllByText("-$50.00");
     expect(expenseAmounts[0]).toHaveClass("text-red-600");
 
     // Check income (positive amount) - use getAllByText since amount appears in table and summary
@@ -153,7 +153,7 @@ describe("TransactionTable", () => {
 
     // Check that summary amounts exist (they appear in both table and summary)
     expect(screen.getAllByText("+$100.00")).toHaveLength(2); // Table and summary
-    expect(screen.getByText("−$75.00")).toBeInTheDocument(); // Only in summary
+    expect(screen.getByText("-$75.00")).toBeInTheDocument(); // Only in summary
     expect(screen.getAllByText("+$25.00")).toHaveLength(1); // Only in summary
   });
 
@@ -252,9 +252,9 @@ describe("TransactionTable", () => {
   it("displays balance amounts correctly", () => {
     render(<TransactionTable {...defaultProps} />);
 
-    expect(screen.getByText("$1000.00")).toBeInTheDocument();
-    expect(screen.getByText("$1100.00")).toBeInTheDocument();
-    expect(screen.getByText("$1075.00")).toBeInTheDocument();
+    expect(screen.getByText("$1,000.00")).toBeInTheDocument();
+    expect(screen.getByText("$1,100.00")).toBeInTheDocument();
+    expect(screen.getByText("$1,075.00")).toBeInTheDocument();
   });
 
   it("has responsive design classes", () => {

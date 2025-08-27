@@ -12,6 +12,7 @@ import {
   ChartOptions,
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
+import { formatCurrency } from "../../utils/formatting/currency";
 import type { ExpenseChartsProps } from "./types";
 
 // Register Chart.js components
@@ -166,8 +167,11 @@ export const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
           label: function (context) {
             const label = context.dataset.label || "";
             const value = context.parsed.y;
-            const sign = label === "Gastos" ? "−" : value >= 0 ? "+" : "−";
-            return `${label}: ${sign}$${Math.abs(value).toFixed(2)}`;
+            const formattedValue =
+              label === "Gastos"
+                ? formatCurrency(Math.abs(value))
+                : formatCurrency(value, { showPlus: value >= 0 });
+            return `${label}: ${formattedValue}`;
           },
         },
       },
@@ -226,7 +230,7 @@ export const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
             const value = context.parsed.y;
             const point = balanceHistory[context.dataIndex];
             const calculatedText = point.isCalculated ? " (calculado)" : "";
-            return `Balance: $${value.toFixed(2)}${calculatedText}`;
+            return `Balance: ${formatCurrency(value)}${calculatedText}`;
           },
         },
       },
@@ -280,8 +284,8 @@ export const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
           label: function (context) {
             const value = context.parsed.y;
             const type = typeBreakdown[context.dataIndex];
-            return `${type.type}: $${value.toFixed(
-              2
+            return `${type.type}: ${formatCurrency(
+              value
             )} (${type.percentage.toFixed(1)}%)`;
           },
         },

@@ -32,10 +32,24 @@ export function formatCurrency(
 
   // Handle edge cases
   if (isNaN(amount) || amount === undefined || amount === null) {
-    if (
-      typeof process !== "undefined" &&
-      process.env?.NODE_ENV === "development"
-    ) {
+    // Only log warnings in development environment
+    let isDevelopment = false;
+    try {
+      // Try Deno environment first
+      const denoEnv = (globalThis as any).Deno?.env?.get("NODE_ENV");
+      if (denoEnv) {
+        isDevelopment = denoEnv === "development";
+      } else {
+        // Fallback for other environments (Node.js, browser)
+        isDevelopment =
+          (globalThis as any).process?.env?.NODE_ENV === "development";
+      }
+    } catch {
+      // Silent fallback - no logging in unknown environments
+      isDevelopment = false;
+    }
+
+    if (isDevelopment) {
       console.warn("formatCurrency: Invalid amount received:", amount);
     }
     return "—";

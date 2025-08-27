@@ -5,6 +5,7 @@ import type {
   ChartDataset,
 } from "../types";
 import type { VizService as IVizService } from "./types";
+import { formatCurrency } from "../../utils/formatting/currency";
 
 /**
  * VizService handles chart data preparation and textual summary generation.
@@ -250,19 +251,20 @@ export class VizService implements IVizService {
       const monthIndex = parseInt(monthNum, 10) - 1;
       const monthName = monthNames[monthIndex];
 
-      // Format amounts with proper currency formatting
-      const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat("es-US", {
-          style: "currency",
-          currency: "USD",
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        }).format(amount);
-      };
+      // Use centralized currency formatting with compact notation for narratives
 
-      const income = formatCurrency(data.totalIncome);
-      const expenses = formatCurrency(data.totalExpenses);
-      const savings = formatCurrency(Math.abs(data.savings));
+      // Round amounts for readability in narratives and format without decimals
+      const income = formatCurrency(Math.round(data.totalIncome)).replace(
+        ".00",
+        ""
+      );
+      const expenses = formatCurrency(Math.round(data.totalExpenses)).replace(
+        ".00",
+        ""
+      );
+      const savings = formatCurrency(
+        Math.round(Math.abs(data.savings))
+      ).replace(".00", "");
 
       // Generate narrative based on savings (positive vs deficit)
       let narrative: string;
@@ -287,29 +289,24 @@ export class VizService implements IVizService {
       );
       const totalSavings = totalIncome - totalExpenses;
 
-      const formatCurrency = (amount: number): string => {
-        return new Intl.NumberFormat("es-US", {
-          style: "currency",
-          currency: "USD",
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        }).format(amount);
-      };
+      // Use centralized currency formatting with compact notation for period summary
 
       const periodSummary =
         totalSavings >= 0
           ? `Resumen del período: ${formatCurrency(
-              totalIncome
-            )} de ingresos, ${formatCurrency(
-              totalExpenses
-            )} de gastos, ${formatCurrency(totalSavings)} de ahorros totales.`
+              Math.round(totalIncome)
+            ).replace(".00", "")} de ingresos, ${formatCurrency(
+              Math.round(totalExpenses)
+            ).replace(".00", "")} de gastos, ${formatCurrency(
+              Math.round(totalSavings)
+            ).replace(".00", "")} de ahorros totales.`
           : `Resumen del período: ${formatCurrency(
-              totalIncome
-            )} de ingresos, ${formatCurrency(
-              totalExpenses
-            )} de gastos, déficit total de ${formatCurrency(
-              Math.abs(totalSavings)
-            )}.`;
+              Math.round(totalIncome)
+            ).replace(".00", "")} de ingresos, ${formatCurrency(
+              Math.round(totalExpenses)
+            ).replace(".00", "")} de gastos, déficit total de ${formatCurrency(
+              Math.round(Math.abs(totalSavings))
+            ).replace(".00", "")}.`;
 
       summaries.push(periodSummary);
     }

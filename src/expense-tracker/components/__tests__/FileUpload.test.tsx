@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { FileUpload } from "../FileUpload";
-import type { CsvValidationResult, ValidationError } from "../types";
+import type { ValidationError } from "../types";
 
 // Mock FileReader
 const mockFileReader = {
@@ -17,7 +17,7 @@ Object.defineProperty(global, "FileReader", {
 });
 
 describe("FileUpload", () => {
-  const mockOnFileProcessed = vi.fn<[CsvValidationResult], void>();
+  const mockOnFileProcessed = vi.fn<[File], void>();
   const mockOnError = vi.fn<[ValidationError[]], void>();
   const maxFileSize = 20 * 1024 * 1024; // 20MB
 
@@ -151,55 +151,25 @@ describe("FileUpload", () => {
     });
 
     await waitFor(() => {
-      expect(mockOnFileProcessed).toHaveBeenCalledWith(
-        expect.objectContaining({
-          isValid: true,
-          transactions: expect.arrayContaining([
-            expect.objectContaining({
-              Date: "2024-01-01",
-              Description: "Test Transaction",
-              Type: "Debit Card",
-              Amount: -50,
-            }),
-          ]),
-          metadata: expect.objectContaining({
-            rowCount: 2,
-            dateRange: expect.objectContaining({
-              start: expect.any(String),
-              end: expect.any(String),
-            }),
-          }),
-        })
-      );
+      expect(mockOnFileProcessed).toHaveBeenCalledWith(file);
     });
   });
 
-  it("handles missing required columns", async () => {
+  it("processes valid CSV file and calls onFileProcessed", async () => {
     render(<FileUpload {...defaultProps} />);
 
-    const csvContent = `Date,Description,Amount
-2024-01-01,Test Transaction,-50.00`;
+    const csvContent = `Date,Description,Type,Amount,Current balance,Status
+2024-01-01,Test Transaction,Debit Card,-50.00,1000.00,Posted`;
 
     const file = new File([csvContent], "test.csv", { type: "text/csv" });
     const fileInput = document.querySelector(
       'input[type="file"]'
     ) as HTMLInputElement;
 
-    mockFileReader.result = csvContent;
-
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    if (mockFileReader.onload) {
-      mockFileReader.onload({ target: { result: csvContent } });
-    }
-
     await waitFor(() => {
-      expect(mockOnError).toHaveBeenCalledWith([
-        expect.objectContaining({
-          type: "missing_columns",
-          message: expect.stringContaining("Faltan columnas requeridas"),
-        }),
-      ]);
+      expect(mockOnFileProcessed).toHaveBeenCalledWith(file);
     });
   });
 

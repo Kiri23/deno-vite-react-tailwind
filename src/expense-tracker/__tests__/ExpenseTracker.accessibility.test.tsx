@@ -16,6 +16,11 @@ vi.mock("../services", () => ({
   VizService: vi.fn().mockImplementation(() => ({
     generateTextualSummary: vi.fn(),
   })),
+  ExpenseAnalysisService: vi.fn().mockImplementation(() => ({
+    getAvailableMonths: vi.fn().mockReturnValue([]),
+    getDefaultAnalysisMonth: vi.fn().mockReturnValue(null),
+    analyzeMonth: vi.fn().mockReturnValue(null),
+  })),
 }));
 
 // Mock the components to focus on accessibility
