@@ -1,7 +1,12 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useExpenseTracker } from "../useExpenseTracker";
-import { CsvService, AnalysisService, VizService } from "../../services";
+import {
+  CsvService,
+  AnalysisService,
+  VizService,
+  ExpenseAnalysisService,
+} from "../../services";
 
 // Mock the services
 vi.mock("../../services", () => ({
@@ -17,12 +22,18 @@ vi.mock("../../services", () => ({
   VizService: vi.fn().mockImplementation(() => ({
     generateTextualSummary: vi.fn(),
   })),
+  ExpenseAnalysisService: vi.fn().mockImplementation(() => ({
+    analyzeMonth: vi.fn(),
+    getAvailableMonths: vi.fn(),
+    getDefaultAnalysisMonth: vi.fn(),
+  })),
 }));
 
 describe("useExpenseTracker - Error Handling", () => {
   const mockCsvService = CsvService as any;
   const mockAnalysisService = AnalysisService as any;
   const mockVizService = VizService as any;
+  const mockExpenseAnalysisService = ExpenseAnalysisService as any;
 
   const mockTransactions = [
     {

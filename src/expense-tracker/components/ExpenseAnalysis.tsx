@@ -11,6 +11,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import type { MonthlyAnalysis, AnalysisOptions } from "../types";
+import { formatCurrency } from "../../utils/formatting/currency";
 
 // Register Chart.js components
 ChartJS.register(
@@ -59,15 +60,6 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
     });
   };
 
-  // Format currency with sign and color
-  const formatCurrency = (amount: number, showSign: boolean = true) => {
-    const sign = amount >= 0 ? "+" : "−";
-    const absAmount = Math.abs(amount);
-    return showSign
-      ? `${sign}$${absAmount.toFixed(2)}`
-      : `$${absAmount.toFixed(2)}`;
-  };
-
   // Filter data for visual display
   const filteredAnalysis = useMemo(() => {
     if (!analysis) return null;
@@ -106,7 +98,6 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
       dailySpending: filteredDailySpending,
     };
   }, [analysis, visualFilters]);
-
   // Prepare daily spending chart data
   const dailyChartData = useMemo(() => {
     if (!filteredAnalysis?.dailySpending) return null;
@@ -152,7 +143,7 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
             const dayIndex = context.dataIndex;
             const dayData = filteredAnalysis?.dailySpending[dayIndex];
             const transactionCount = dayData?.transactionCount || 0;
-            return `Gastos: $${value.toFixed(
+            return `Gastos: ${value.toFixed(
               2
             )} (${transactionCount} transacciones)`;
           },
@@ -181,7 +172,7 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
         },
         ticks: {
           callback: function (value) {
-            return `$${value}`;
+            return `${value}`;
           },
         },
       },
@@ -347,7 +338,9 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm font-medium text-red-800">Mayor Gasto</p>
                 <p className="text-lg font-bold text-red-900">
-                  {formatCurrency(analysis.insights.largestExpense.amount)}
+                  {formatCurrency(analysis.insights.largestExpense.amount, {
+                    showPlus: analysis.insights.largestExpense.amount >= 0,
+                  })}
                 </p>
                 <p className="text-xs text-red-700 mt-1 truncate">
                   {analysis.insights.largestExpense.description}
@@ -377,10 +370,7 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
                   Día de Mayor Gasto
                 </p>
                 <p className="text-lg font-bold text-purple-900">
-                  {formatCurrency(
-                    analysis.insights.highestSpendingDay.amount,
-                    false
-                  )}
+                  {formatCurrency(analysis.insights.highestSpendingDay.amount)}
                 </p>
                 <p className="text-xs text-purple-700 mt-1">
                   {analysis.insights.highestSpendingDay.date}
@@ -392,19 +382,14 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
                   Promedio Diario
                 </p>
                 <p className="text-lg font-bold text-gray-900">
-                  {formatCurrency(
-                    analysis.insights.averageDailySpending,
-                    false
-                  )}
+                  {formatCurrency(analysis.insights.averageDailySpending)}
                 </p>
                 <p className="text-xs text-gray-700 mt-1">
-                  Total:{" "}
-                  {formatCurrency(analysis.insights.totalExpenses, false)}
+                  Total: {formatCurrency(analysis.insights.totalExpenses)}
                 </p>
               </div>
             </div>
           </div>
-
           {/* Top-10 Expenses Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -456,7 +441,9 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
                           <span className="text-red-600">
-                            {formatCurrency(expense.amount)}
+                            {formatCurrency(expense.amount, {
+                              showPlus: expense.amount >= 0,
+                            })}
                           </span>
                           <span className="sr-only">Gasto</span>
                         </td>
@@ -503,7 +490,9 @@ export const ExpenseAnalysis: React.FC<ExpenseAnalysisProps> = ({
                           </td>
                           <td className="px-4 py-4 text-sm text-right">
                             <span className="text-red-600 font-medium">
-                              {formatCurrency(type.totalAmount)}
+                              {formatCurrency(type.totalAmount, {
+                                showPlus: type.totalAmount >= 0,
+                              })}
                             </span>
                           </td>
                           <td className="px-4 py-4 text-sm text-right font-medium">

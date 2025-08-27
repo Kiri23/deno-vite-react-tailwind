@@ -288,7 +288,7 @@ describe("ExpenseAnalysis", () => {
 
       // Check insights are displayed
       expect(screen.getByText("Mayor Gasto")).toBeInTheDocument();
-      expect(screen.getByText("−$500.00")).toBeInTheDocument();
+      expect(screen.getAllByText("-$500.00")[0]).toBeInTheDocument();
       expect(screen.getByText("Large Purchase")).toBeInTheDocument();
 
       expect(screen.getByText("Tipo Más Alto")).toBeInTheDocument();
@@ -314,7 +314,7 @@ describe("ExpenseAnalysis", () => {
       // Check first expense (largest)
       expect(screen.getByText("Large Purchase")).toBeInTheDocument();
       expect(screen.getByText("2024-03-05")).toBeInTheDocument();
-      expect(screen.getByText("−$500.00")).toBeInTheDocument();
+      expect(screen.getAllByText("-$500.00")[1]).toBeInTheDocument();
     });
 
     it("should show empty state when no expenses", () => {
@@ -340,12 +340,12 @@ describe("ExpenseAnalysis", () => {
       ).toBeInTheDocument();
 
       // Check that Debit Card type is displayed (transfers should be hidden by default)
-      expect(screen.getByText("Debit Card")).toBeInTheDocument();
+      expect(screen.getAllByText("Debit Card")).toHaveLength(4); // Appears in insights and breakdown sections
       expect(screen.getByText("Withdrawal")).toBeInTheDocument();
 
       // Check percentages and amounts
-      expect(screen.getByText("−$650.00")).toBeInTheDocument();
-      expect(screen.getByText("−$100.00")).toBeInTheDocument();
+      expect(screen.getByText("-$650.00")).toBeInTheDocument();
+      expect(screen.getByText("-$100.00")).toBeInTheDocument();
     });
 
     it("should recalculate percentages when filters are applied", async () => {
@@ -365,7 +365,7 @@ describe("ExpenseAnalysis", () => {
       fireEvent.click(hideTransfersCheckbox);
 
       await waitFor(() => {
-        expect(screen.getByText("Transfer")).toBeInTheDocument();
+        expect(screen.getAllByText("Transfer")).toHaveLength(2); // Appears in table and visual bars
       });
     });
   });
@@ -445,9 +445,9 @@ describe("ExpenseAnalysis", () => {
     it("should format currency with proper signs and colors", () => {
       render(<ExpenseAnalysis {...defaultProps} />);
 
-      // Negative amounts should use minus sign (−) not hyphen (-)
-      expect(screen.getByText("−$500.00")).toBeInTheDocument();
-      expect(screen.getByText("−$150.00")).toBeInTheDocument();
+      // Negative amounts should use ASCII hyphen-minus (-) per foundation.md
+      expect(screen.getAllByText("-$500.00")).toHaveLength(2); // Appears in insights and table
+      expect(screen.getByText("-$150.00")).toBeInTheDocument();
 
       // Positive amounts in insights should not have signs
       expect(screen.getByText("$127.50")).toBeInTheDocument();
