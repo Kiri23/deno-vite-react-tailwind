@@ -4,9 +4,9 @@ import type {
   OverallSummary,
   TypeSummary,
   BalancePoint,
-} from "../types";
-import type { AnalysisPort } from "./ports";
-import { AnalysisService } from "./AnalysisService";
+} from "../types/index.ts";
+import type { AnalysisPort } from "./ports.ts";
+import { AnalysisService } from "./AnalysisService.ts";
 
 /**
  * LocalAnalysisService implements AnalysisPort interface using the existing AnalysisService

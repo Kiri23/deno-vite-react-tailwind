@@ -2,9 +2,9 @@ import type {
   RawTransaction,
   TransactionData,
   CsvValidationResult,
-} from "../types";
-import type { CsvPort } from "./ports";
-import { CsvService } from "./CsvService";
+} from "../types/index.ts";
+import type { CsvPort } from "./ports.ts";
+import { CsvService } from "./CsvService.ts";
 
 /**
  * LocalCsvService implements CsvPort interface using the existing CsvService

@@ -3,9 +3,9 @@ import type {
   BalancePoint,
   TypeSummary,
   ChartDataset,
-} from "../types";
-import type { VizPort } from "./ports";
-import { VizService } from "./VizService";
+} from "../types/index.ts";
+import type { VizPort } from "./ports.ts";
+import { VizService } from "./VizService.ts";
 
 /**
  * LocalVizService implements VizPort interface using the existing VizService
