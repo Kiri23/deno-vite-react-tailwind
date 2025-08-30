@@ -1,5 +1,36 @@
 // Test setup file for Vitest
 import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
+import { afterEach, beforeEach } from "vitest";
+
+// Cleanup after each test
+afterEach(() => {
+  cleanup();
+});
+
+// Setup deterministic testing environment
+beforeEach(() => {
+  // Fix timezone for consistent date testing
+  process.env.TZ = "America/New_York";
+
+  // Mock Date.now() for temporal consistency
+  const mockDate = new Date("2025-01-15T10:00:00.000Z");
+  vi.setSystemTime(mockDate);
+});
+
+// Global test utilities
+global.ResizeObserver = vi.fn(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// Mock IntersectionObserver for chart components
+global.IntersectionObserver = vi.fn(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
 
 // Mock FileReader for testing
 global.FileReader = class MockFileReader {

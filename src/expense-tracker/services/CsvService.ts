@@ -4,12 +4,16 @@ import type {
   CsvValidationResult,
   ValidationError,
 } from "../types";
+import type { CsvPort } from "./ports";
 
 /**
  * CsvService handles CSV file validation, parsing, and data normalization
  * for expense tracker transactions.
+ *
+ * Implements CsvPort interface for service layer architecture.
+ * Requirements: 1.1, 1.2, 2.2
  */
-export class CsvService {
+export class CsvService implements CsvPort {
   private static readonly MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
   private static readonly REQUIRED_COLUMNS = [
     "Date",
@@ -502,8 +506,25 @@ export class CsvService {
 
   /**
    * Main validation and parsing method (Task 2.1 implementation)
+   * Implements CsvPort.validateAndParse interface method
+   */
+  async validateAndParse(file: File): Promise<CsvValidationResult> {
+    return CsvService.validateAndParseImpl(file);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static async validateAndParse(file: File): Promise<CsvValidationResult> {
+    return CsvService.validateAndParseImpl(file);
+  }
+
+  /**
+   * Internal implementation
+   */
+  private static async validateAndParseImpl(
+    file: File
+  ): Promise<CsvValidationResult> {
     console.log("validateAndParse: Starting validation for file:", file.name);
     console.log("File size:", file.size, "bytes");
     console.log("File type:", file.type);
@@ -560,7 +581,7 @@ export class CsvService {
         normalizedTransactions,
         balanceSource,
         warnings: normalizationWarnings,
-      } = this.applyFullNormalization(transactions);
+      } = CsvService.applyFullNormalization(transactions);
 
       // Combine all warnings
       const allWarnings = [...warnings, ...normalizationWarnings];
@@ -618,8 +639,25 @@ export class CsvService {
 
   /**
    * Normalize transaction types using the normalization dictionary
+   * Implements CsvPort.normalizeTransactions interface method
+   */
+  normalizeTransactions(transactions: RawTransaction[]): TransactionData[] {
+    return CsvService.normalizeTransactionTypesImpl(transactions);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static normalizeTransactionTypes(
+    transactions: RawTransaction[]
+  ): TransactionData[] {
+    return CsvService.normalizeTransactionTypesImpl(transactions);
+  }
+
+  /**
+   * Internal implementation
+   */
+  private static normalizeTransactionTypesImpl(
     transactions: RawTransaction[]
   ): TransactionData[] {
     return transactions.map((transaction) => {
@@ -647,8 +685,23 @@ export class CsvService {
 
   /**
    * Normalize dates to YYYY-MM-DD format with America/New_York timezone
+   * Implements CsvPort.normalizeDate interface method
+   */
+  normalizeDate(dateStr: string): string {
+    return CsvService.normalizeDateImpl(dateStr);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static normalizeDate(dateStr: string): string {
+    return CsvService.normalizeDateImpl(dateStr);
+  }
+
+  /**
+   * Internal implementation
+   */
+  private static normalizeDateImpl(dateStr: string): string {
     try {
       // If already in YYYY-MM-DD format, return as-is
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
@@ -698,8 +751,23 @@ export class CsvService {
 
   /**
    * Canonicalize amounts: negative = expense, positive = income
+   * Implements CsvPort.canonicalizeAmount interface method
+   */
+  canonicalizeAmount(amount: number, type: string): number {
+    return CsvService.canonicalizeAmountImpl(amount, type);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static canonicalizeAmount(amount: number, type: string): number {
+    return CsvService.canonicalizeAmountImpl(amount, type);
+  }
+
+  /**
+   * Internal implementation
+   */
+  private static canonicalizeAmountImpl(amount: number, type: string): number {
     // For most transaction types, the sign should already be correct
     // But we can apply business rules here if needed
 
@@ -783,14 +851,15 @@ export class CsvService {
     const warnings: string[] = [];
 
     // Step 1: Normalize transaction types
-    let normalizedTransactions = this.normalizeTransactionTypes(transactions);
+    let normalizedTransactions =
+      CsvService.normalizeTransactionTypesImpl(transactions);
 
     // Step 2: Normalize dates and canonicalize amounts
     normalizedTransactions = normalizedTransactions.map(
       (transaction, index) => {
         try {
-          const normalizedDate = this.normalizeDate(transaction.Date);
-          const canonicalAmount = this.canonicalizeAmount(
+          const normalizedDate = CsvService.normalizeDateImpl(transaction.Date);
+          const canonicalAmount = CsvService.canonicalizeAmountImpl(
             transaction.Amount,
             transaction.Type
           );
@@ -821,7 +890,7 @@ export class CsvService {
     let balanceSource: "original" | "calculated" = "original";
 
     if (needsSyntheticBalance) {
-      normalizedTransactions = this.calculateSyntheticBalance(
+      normalizedTransactions = CsvService.calculateSyntheticBalance(
         normalizedTransactions
       );
       balanceSource = "calculated";

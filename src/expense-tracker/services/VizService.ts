@@ -4,17 +4,27 @@ import type {
   TypeSummary,
   ChartDataset,
 } from "../types";
-import type { VizService as IVizService } from "./types";
+import type { VizPort } from "./ports";
 import { formatCurrency } from "../../utils/formatting/currency";
 
 /**
  * VizService handles chart data preparation and textual summary generation.
  * Transforms analysis data into chart-ready formats with accessibility features.
+ *
+ * Implements VizPort interface for service layer architecture.
+ * Requirements: 1.1, 1.2, 2.2
  */
-export class VizService implements IVizService {
+export class VizService implements VizPort {
   /**
    * Transform monthly data into chart-ready format for bar charts
-   * Task 4.1 implementation
+   * Implements VizPort.prepareMonthlyChartData interface method
+   */
+  prepareMonthlyChartData(monthlyData: MonthlyData[]): ChartDataset[] {
+    return VizService.prepareMonthlyChartData(monthlyData);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static prepareMonthlyChartData(monthlyData: MonthlyData[]): ChartDataset[] {
     if (monthlyData.length === 0) {
@@ -87,7 +97,14 @@ export class VizService implements IVizService {
 
   /**
    * Transform balance points into line chart format
-   * Task 4.2 implementation
+   * Implements VizPort.prepareBalanceChartData interface method
+   */
+  prepareBalanceChartData(balanceHistory: BalancePoint[]): ChartDataset {
+    return VizService.prepareBalanceChartData(balanceHistory);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static prepareBalanceChartData(balanceHistory: BalancePoint[]): ChartDataset {
     if (balanceHistory.length === 0) {
@@ -155,7 +172,14 @@ export class VizService implements IVizService {
 
   /**
    * Transform type summary into bar chart format
-   * Task 4.2 implementation (part of balance/type charts)
+   * Implements VizPort.prepareTypeChartData interface method
+   */
+  prepareTypeChartData(typeSummary: TypeSummary[]): ChartDataset {
+    return VizService.prepareTypeChartData(typeSummary);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static prepareTypeChartData(typeSummary: TypeSummary[]): ChartDataset {
     if (typeSummary.length === 0) {
@@ -220,7 +244,14 @@ export class VizService implements IVizService {
 
   /**
    * Generate textual summaries in Spanish for monthly data
-   * Task 4.3 implementation
+   * Implements VizPort.generateTextualSummary interface method
+   */
+  generateTextualSummary(monthlyData: MonthlyData[]): string[] {
+    return VizService.generateTextualSummary(monthlyData);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static generateTextualSummary(monthlyData: MonthlyData[]): string[] {
     if (monthlyData.length === 0) {
@@ -312,22 +343,5 @@ export class VizService implements IVizService {
     }
 
     return summaries;
-  }
-
-  // Instance methods that delegate to static methods for interface compliance
-  prepareMonthlyChartData(monthlyData: MonthlyData[]): ChartDataset[] {
-    return VizService.prepareMonthlyChartData(monthlyData);
-  }
-
-  prepareBalanceChartData(balanceHistory: BalancePoint[]): ChartDataset {
-    return VizService.prepareBalanceChartData(balanceHistory);
-  }
-
-  prepareTypeChartData(typeSummary: TypeSummary[]): ChartDataset {
-    return VizService.prepareTypeChartData(typeSummary);
-  }
-
-  generateTextualSummary(monthlyData: MonthlyData[]): string[] {
-    return VizService.generateTextualSummary(monthlyData);
   }
 }

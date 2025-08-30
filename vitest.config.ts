@@ -7,5 +7,11 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/test-setup.ts"],
+    // Ensure consistent React version resolution
+    server: {
+      deps: {
+        external: ["react", "react-dom"],
+      },
+    },
   },
 });

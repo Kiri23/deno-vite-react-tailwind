@@ -5,16 +5,32 @@ import type {
   TypeSummary,
   BalancePoint,
 } from "../types";
-import type { AnalysisService as IAnalysisService } from "./types";
+import type { AnalysisPort } from "./ports";
 
 /**
  * AnalysisService handles data aggregation and analysis for expense tracker transactions.
  * Provides monthly summaries, overall statistics, type breakdowns, and balance history.
+ *
+ * Implements AnalysisPort interface for service layer architecture.
+ * Requirements: 1.1, 1.2, 2.2
  */
-export class AnalysisService implements IAnalysisService {
+export class AnalysisService implements AnalysisPort {
   /**
    * Calculate monthly data aggregation with current month detection and exclusion logic
-   * Task 3.1 implementation
+   * Implements AnalysisPort.calculateMonthlySummary interface method
+   */
+  calculateMonthlySummary(
+    transactions: TransactionData[],
+    excludeCurrent: boolean = true
+  ): MonthlyData[] {
+    return AnalysisService.calculateMonthlySummary(
+      transactions,
+      excludeCurrent
+    );
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static calculateMonthlySummary(
     transactions: TransactionData[],
@@ -92,7 +108,14 @@ export class AnalysisService implements IAnalysisService {
 
   /**
    * Calculate overall summary for the entire period
-   * Task 3.2 implementation
+   * Implements AnalysisPort.calculateOverallSummary interface method
+   */
+  calculateOverallSummary(transactions: TransactionData[]): OverallSummary {
+    return AnalysisService.calculateOverallSummary(transactions);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static calculateOverallSummary(
     transactions: TransactionData[]
@@ -153,7 +176,14 @@ export class AnalysisService implements IAnalysisService {
 
   /**
    * Group transactions by normalized type and calculate breakdown analysis
-   * Task 3.3 implementation
+   * Implements AnalysisPort.groupByTransactionType interface method
+   */
+  groupByTransactionType(transactions: TransactionData[]): TypeSummary[] {
+    return AnalysisService.groupByTransactionType(transactions);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static groupByTransactionType(
     transactions: TransactionData[]
@@ -214,7 +244,14 @@ export class AnalysisService implements IAnalysisService {
 
   /**
    * Generate balance history from transactions
-   * Task 3.3 implementation (balance history for charts)
+   * Implements AnalysisPort.generateBalanceHistory interface method
+   */
+  generateBalanceHistory(transactions: TransactionData[]): BalancePoint[] {
+    return AnalysisService.generateBalanceHistory(transactions);
+  }
+
+  /**
+   * Static implementation for backward compatibility
    */
   static generateBalanceHistory(
     transactions: TransactionData[]
@@ -244,28 +281,5 @@ export class AnalysisService implements IAnalysisService {
     }
 
     return balanceHistory;
-  }
-
-  // Instance methods that delegate to static methods for interface compliance
-  calculateMonthlySummary(
-    transactions: TransactionData[],
-    excludeCurrentMonth?: boolean
-  ): MonthlyData[] {
-    return AnalysisService.calculateMonthlySummary(
-      transactions,
-      excludeCurrentMonth
-    );
-  }
-
-  calculateOverallSummary(transactions: TransactionData[]): OverallSummary {
-    return AnalysisService.calculateOverallSummary(transactions);
-  }
-
-  groupByTransactionType(transactions: TransactionData[]): TypeSummary[] {
-    return AnalysisService.groupByTransactionType(transactions);
-  }
-
-  generateBalanceHistory(transactions: TransactionData[]): BalancePoint[] {
-    return AnalysisService.generateBalanceHistory(transactions);
   }
 }
