@@ -10,8 +10,12 @@ export default defineConfig({
     // Ensure consistent React version resolution
     server: {
       deps: {
-        external: ["react", "react-dom"],
+        inline: ["react", "react-dom"],
       },
+    },
+    // Fix React version compatibility
+    define: {
+      "process.env.NODE_ENV": '"test"',
     },
   },
 });

@@ -20,3 +20,6 @@ export * from "./hooks";
 
 // Services
 export * from "./services";
+
+// ViewModels
+export * from "./vm";

@@ -15,7 +15,7 @@ import type {
   TypeSummary,
   BalancePoint,
   ChartDataset,
-} from "../types";
+} from "../types/index.ts";
 
 /**
  * CsvPort - Contract for CSV processing and data normalization services

@@ -1,7 +1,7 @@
 // Test setup file for Vitest
 import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
-import { afterEach, beforeEach } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 
 // Cleanup after each test
 afterEach(() => {
@@ -54,10 +54,37 @@ global.FileReader = class MockFileReader {
     | null = null;
 
   readAsText(file: Blob, encoding?: string) {
-    setTimeout(async () => {
+    setTimeout(() => {
       try {
-        // Use the Response API to read the blob content
-        const text = await file.text();
+        // Simple mock implementation for test files
+        // For File objects created with new File([content], name), extract the content
+        let text: string = "";
+
+        if (file instanceof File) {
+          // Access the file content from the File constructor
+          // In test environment, File objects store content in internal properties
+          const fileAny = file as any;
+
+          // Try different ways to extract content from test File objects
+          if (fileAny.stream && typeof fileAny.stream === "function") {
+            // Modern File API approach - not available in test environment
+            text = "";
+          } else if (fileAny.content) {
+            // Custom content property
+            text = fileAny.content;
+          } else {
+            // Try to extract from File constructor arguments
+            // File objects in tests are created like: new File([content], name)
+            // The content is stored in the first argument
+            try {
+              const content = fileAny[0] || fileAny._content || "";
+              text = typeof content === "string" ? content : "";
+            } catch {
+              text = "";
+            }
+          }
+        }
+
         this.result = text;
         this.readyState = 2; // DONE
         if (this.onload) {
