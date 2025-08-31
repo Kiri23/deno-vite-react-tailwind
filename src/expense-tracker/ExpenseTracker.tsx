@@ -318,6 +318,7 @@ function usePerformanceMonitoring() {
   const [isSlowDevice, setIsSlowDevice] = React.useState(false);
 
   React.useEffect(() => {
+    if(!window) return
     // Detect slow devices based on hardware concurrency and memory
     const navigator = window.navigator as any;
     const cores = navigator.hardwareConcurrency || 1;
