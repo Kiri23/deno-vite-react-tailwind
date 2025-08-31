@@ -12,6 +12,19 @@ import type {
   AnalysisOptions,
 } from "../types";
 
+// Re-export types that components need
+export type {
+  TransactionData,
+  ValidationError,
+  MonthlyData,
+  OverallSummary,
+  BalancePoint,
+  TypeSummary,
+  CsvValidationResult,
+  MonthlyAnalysis,
+  AnalysisOptions,
+};
+
 // Main container component props
 export interface ExpenseTrackerProps {}
 

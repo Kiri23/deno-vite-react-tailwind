@@ -69,9 +69,9 @@ export interface ChartDataset {
   labels: string[];
   datasets: {
     label: string;
-    data: number[];
+    data: (number | null)[];
     backgroundColor: string[];
-    borderColor?: string;
+    borderColor?: string | string[];
     borderWidth?: number;
   }[];
 }

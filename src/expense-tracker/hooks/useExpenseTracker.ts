@@ -181,10 +181,11 @@ function categorizeValidationIssues(result: CsvValidationResult): {
     }
   });
 
-  const canProceed =
+  const canProceed = Boolean(
     blockingErrors.length === 0 &&
-    result.transactions &&
-    result.transactions.length > 0;
+      result.transactions &&
+      result.transactions.length > 0
+  );
 
   return {
     blockingErrors,

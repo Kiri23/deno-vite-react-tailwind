@@ -29,11 +29,11 @@ class ExpenseTrackerErrorBoundary extends React.Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("ExpenseTracker Error:", error, errorInfo);
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return (
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
