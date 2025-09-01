@@ -10,3 +10,4 @@ export * from "./useExpenseCore";
 export * from "./useCsv";
 export * from "./useAnalyze";
 export * from "./useVisualize";
+export * from "./useUrlSearchSync";
