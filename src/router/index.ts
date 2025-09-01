@@ -21,7 +21,6 @@ declare module "@tanstack/react-router" {
 
 // Re-export everything
 export * from "./routes";
-export * from "./types";
 export * from "./hooks";
 export { default as RouterProvider } from "./RouterProvider";
 export type Router = typeof router;

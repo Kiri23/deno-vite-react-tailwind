@@ -415,7 +415,7 @@ export function createExpenseVM(services: Services): ExpenseVM {
         );
 
         // Create contextual annotations for charts and tables
-        const annotations = currentState.monthly.map((month, index) => ({
+        const annotations = currentState.monthly.map((month) => ({
           target: `month-${month.month}`,
           text: `${month.month}: ${
             month.savings >= 0 ? "Ahorro" : "Déficit"

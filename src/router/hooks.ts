@@ -15,7 +15,7 @@ export function useUpdateSearch<T extends Record<string, any>>() {
   const updateSearch = useCallback(
     (updates: Partial<T>) => {
       navigate({
-        search: (prev: any) => ({ ...prev, ...updates }),
+        search: updates as any,
       });
     },
     [navigate]

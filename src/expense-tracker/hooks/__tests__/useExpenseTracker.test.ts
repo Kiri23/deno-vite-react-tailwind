@@ -9,18 +9,23 @@ import {
 } from "../../services";
 
 // Mock the services
-vi.mock("../../services", () => ({
-  CsvService: {
-    validateAndParse: vi.fn(),
-  },
-  AnalysisService: vi.fn(),
-  VizService: vi.fn(),
-  ExpenseAnalysisService: vi.fn().mockImplementation(() => ({
-    getAvailableMonths: vi.fn().mockReturnValue([]),
-    getDefaultAnalysisMonth: vi.fn().mockReturnValue(null),
-    analyzeMonth: vi.fn().mockReturnValue(null),
-  })),
-}));
+vi.mock("../../services", () => {
+  const CsvServiceMock = vi.fn().mockImplementation(() => ({
+    normalizeTransactions: vi.fn(),
+  }));
+  CsvServiceMock.validateAndParse = vi.fn();
+
+  return {
+    CsvService: CsvServiceMock,
+    AnalysisService: vi.fn(),
+    VizService: vi.fn(),
+    ExpenseAnalysisService: vi.fn().mockImplementation(() => ({
+      getAvailableMonths: vi.fn().mockReturnValue([]),
+      getDefaultAnalysisMonth: vi.fn().mockReturnValue(null),
+      analyzeMonth: vi.fn().mockReturnValue(null),
+    })),
+  };
+});
 
 describe("useExpenseTracker", () => {
   const mockCsvService = CsvService as any;

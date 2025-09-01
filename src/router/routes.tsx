@@ -93,10 +93,9 @@ export const analyzeRoute = createRoute({
       <p className="text-red-600">{error.message}</p>
     </div>
   ),
-  loader: async ({ search }) => {
+  loader: async () => {
     // Placeholder loader - will be enhanced with actual data loading
     return {
-      searchParams: search,
       timestamp: Date.now(),
     };
   },
@@ -120,10 +119,9 @@ export const visualizeRoute = createRoute({
       <p className="text-red-600">{error.message}</p>
     </div>
   ),
-  loader: async ({ search }) => {
+  loader: async () => {
     // Placeholder loader - will be enhanced with actual data loading
     return {
-      searchParams: search,
       timestamp: Date.now(),
     };
   },

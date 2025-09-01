@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import reactLogo from "./assets/react.svg";
 import { TanStackDemo } from "./components/TanStackDemo.tsx";
 import { ExpenseTracker } from "./expense-tracker";
 
@@ -31,8 +30,8 @@ function App() {
                 className="hover:scale-110 transition-transform"
               >
                 <img
-                  src={reactLogo}
-                  className="h-12 w-12 animate-spin-slow"
+                  src="/vite.svg"
+                  className="h-12 w-12 hover:animate-spin"
                   alt="React logo"
                 />
               </a>

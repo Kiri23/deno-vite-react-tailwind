@@ -332,7 +332,10 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
           return;
         }
 
-        const normalizedTransactions = enhancedResult.transactions!;
+        const rawTransactions = enhancedResult.transactions!;
+        const csvService = new CsvService();
+        const normalizedTransactions =
+          csvService.normalizeTransactions(rawTransactions);
         setTransactions(normalizedTransactions);
 
         // Step 2: Generate analysis data using AnalysisService
