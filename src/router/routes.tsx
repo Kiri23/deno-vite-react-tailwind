@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoute, createRootRoute, Outlet } from "@tanstack/react-router";
 import { z } from "zod";
+import { ExpensesLayout } from "../layouts/ExpensesLayout";
 
 // Root route
 export const rootRoute = createRootRoute({
@@ -11,7 +12,7 @@ export const rootRoute = createRootRoute({
 export const expensesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/expenses",
-  component: () => <Outlet />,
+  component: ExpensesLayout,
 });
 
 // Zod schemas for search parameter validation
