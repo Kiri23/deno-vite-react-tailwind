@@ -132,33 +132,12 @@ export function useUrlSearchSync(
       try {
         // Sync range parameters
         if (finalConfig.syncRange) {
-          const newRange: { from?: string; to?: string } = {};
-
-          if (
-            searchParams.monthFrom &&
-            searchParams.monthFrom !== core.state.range.from
-          ) {
-            newRange.from = searchParams.monthFrom;
-          }
-
-          if (
-            searchParams.monthTo &&
-            searchParams.monthTo !== core.state.range.to
-          ) {
-            newRange.to = searchParams.monthTo;
-          }
-
-          // Only update if there are actual changes
-          if (
-            Object.keys(newRange).length > 0 ||
-            searchParams.monthFrom !== core.state.range.from ||
-            searchParams.monthTo !== core.state.range.to
-          ) {
-            core.commands.setRange({
-              from: searchParams.monthFrom,
-              to: searchParams.monthTo,
-            });
-          }
+          // Always sync range parameters, even if they're undefined (empty URL)
+          // This ensures VM state matches URL state exactly
+          core.commands.setRange({
+            from: searchParams.monthFrom,
+            to: searchParams.monthTo,
+          });
         }
 
         // Sync filter parameters
@@ -179,6 +158,9 @@ export function useUrlSearchSync(
             });
           }
         }
+      } catch (error) {
+        // Handle VM command failures gracefully
+        console.warn("Failed to sync URL parameters to VM state:", error);
       } finally {
         // Reset syncing flag after a brief delay
         setTimeout(() => {
@@ -194,19 +176,9 @@ export function useUrlSearchSync(
    */
   const updateUrl = useCallback(
     (params: Partial<AnalyzeSearch | VisualizeSearch>) => {
-      if (isSyncingRef.current) return; // Prevent updates during sync
-
-      isSyncingRef.current = true;
-
-      try {
-        navigate({
-          search: params as any,
-        });
-      } finally {
-        setTimeout(() => {
-          isSyncingRef.current = false;
-        }, 50);
-      }
+      navigate({
+        search: params as any,
+      });
     },
     [navigate]
   );
@@ -230,19 +202,31 @@ export function useUrlSearchSync(
    * This enables programmatic state changes to update the URL
    */
   useEffect(() => {
-    if (isSyncingRef.current) return; // Don't sync during URL-driven updates
-
     const isAnalyzeRoute = location.pathname === "/expenses/analyze";
     const isVisualizeRoute = location.pathname === "/expenses/visualize";
 
     if (isAnalyzeRoute || isVisualizeRoute) {
       const vmParams = vmStateToUrlParams();
 
-      // Only update URL if there are meaningful changes
-      if (Object.keys(vmParams).length > 0) {
+      // Check if VM state differs from current URL state
+      const hasChanges =
+        vmParams.monthFrom !== search.monthFrom ||
+        vmParams.monthTo !== search.monthTo ||
+        JSON.stringify(vmParams.categories || []) !==
+          JSON.stringify(search.categories || []);
+
+      // Also check if VM has meaningful state that should be reflected in URL
+      const hasVmState =
+        vmParams.monthFrom ||
+        vmParams.monthTo ||
+        (vmParams.categories && vmParams.categories.length > 0);
+
+      if ((hasChanges || hasVmState) && !isSyncingRef.current) {
         // Debounce URL updates to prevent excessive navigation
         const timeoutId = setTimeout(() => {
-          updateUrl(vmParams);
+          if (!isSyncingRef.current) {
+            updateUrl(vmParams);
+          }
         }, finalConfig.debounceMs);
 
         return () => clearTimeout(timeoutId);
@@ -252,6 +236,7 @@ export function useUrlSearchSync(
     core.state.range,
     core.state.filters,
     location.pathname,
+    search,
     vmStateToUrlParams,
     updateUrl,
     finalConfig.debounceMs,
