@@ -2,10 +2,29 @@ import React from "react";
 import { createRoute, createRootRoute, Outlet } from "@tanstack/react-router";
 import { z } from "zod";
 import { ExpensesLayout } from "../layouts/ExpensesLayout";
+import {
+  ImportCsvPage,
+  NormalizePage,
+  AnalyzePage,
+  VisualizePage,
+} from "../pages";
 
 // Root route
 export const rootRoute = createRootRoute({
   component: () => <Outlet />,
+});
+
+// Index route that redirects to expenses/import
+export const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: () => {
+    // Redirect to expenses/import
+    React.useEffect(() => {
+      window.location.href = "/expenses/import";
+    }, []);
+    return <div>Redirecting...</div>;
+  },
 });
 
 // Expenses parent route
@@ -45,10 +64,7 @@ export const importRoute = createRoute({
   getParentRoute: () => expensesRoute,
   path: "/import",
   validateSearch: (search) => ImportSearchSchema.parse(search),
-  component: () => {
-    // Placeholder component - will be replaced with actual ImportCsvPage
-    return <div>Import CSV Page - Coming Soon</div>;
-  },
+  component: ImportCsvPage,
   pendingComponent: () => <div>Loading import page...</div>,
   errorComponent: ({ error }) => (
     <div className="p-4 bg-red-50 border border-red-200 rounded">
@@ -63,10 +79,7 @@ export const normalizeRoute = createRoute({
   getParentRoute: () => expensesRoute,
   path: "/normalize",
   validateSearch: (search) => NormalizeSearchSchema.parse(search),
-  component: () => {
-    // Placeholder component - will be replaced with actual NormalizePage
-    return <div>Normalize Data Page - Coming Soon</div>;
-  },
+  component: NormalizePage,
   pendingComponent: () => <div>Loading normalize page...</div>,
   errorComponent: ({ error }) => (
     <div className="p-4 bg-red-50 border border-red-200 rounded">
@@ -83,10 +96,7 @@ export const analyzeRoute = createRoute({
   getParentRoute: () => expensesRoute,
   path: "/analyze",
   validateSearch: (search) => AnalyzeSearchSchema.parse(search),
-  component: () => {
-    // Placeholder component - will be replaced with actual AnalyzePage
-    return <div>Analyze Data Page - Coming Soon</div>;
-  },
+  component: AnalyzePage,
   pendingComponent: () => <div>Loading analysis...</div>,
   errorComponent: ({ error }) => (
     <div className="p-4 bg-red-50 border border-red-200 rounded">
@@ -107,10 +117,7 @@ export const visualizeRoute = createRoute({
   getParentRoute: () => expensesRoute,
   path: "/visualize",
   validateSearch: (search) => VisualizeSearchSchema.parse(search),
-  component: () => {
-    // Placeholder component - will be replaced with actual VisualizePage
-    return <div>Visualize Data Page - Coming Soon</div>;
-  },
+  component: VisualizePage,
   pendingComponent: () => <div>Loading visualizations...</div>,
   errorComponent: ({ error }) => (
     <div className="p-4 bg-red-50 border border-red-200 rounded">
@@ -130,6 +137,7 @@ export const visualizeRoute = createRoute({
 
 // Route tree
 export const routeTree = rootRoute.addChildren([
+  indexRoute,
   expensesRoute.addChildren([
     importRoute,
     normalizeRoute,

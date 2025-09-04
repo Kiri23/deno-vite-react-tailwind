@@ -63,15 +63,39 @@ export function useCsv(core: UseExpenseCoreReturn): UseCsvReturn {
    */
   const uploadFile = useCallback(
     async (file: File) => {
+      console.log("useCsv.uploadFile: Starting upload for", file.name);
+
       // Load and validate CSV
       await core.commands.loadCsv(file);
 
+      // We need to wait a bit for the state to update since it's async
+      // This is a temporary fix - ideally the commands should return the new state
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      console.log("useCsv.uploadFile: CSV loaded, state:", {
+        rawCount: core.state.raw.length,
+        errors: core.state.errors.csv,
+      });
+
       // If successful, normalize the data
       if (core.state.raw.length > 0 && !core.state.errors.csv) {
+        console.log("useCsv.uploadFile: Normalizing data...");
         await core.commands.normalize();
+
+        // Wait for normalization to complete
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        console.log("useCsv.uploadFile: Normalization completed, state:", {
+          normalizedCount: core.state.normalized.length,
+        });
+      } else {
+        console.warn("useCsv.uploadFile: Skipping normalization", {
+          rawCount: core.state.raw.length,
+          hasErrors: !!core.state.errors.csv,
+        });
       }
     },
-    [core.commands, core.state.raw.length, core.state.errors.csv]
+    [core.commands, core.state]
   );
 
   /**

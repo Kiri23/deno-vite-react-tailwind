@@ -490,9 +490,9 @@ export function AnalyzeView({
 
       {/* Detailed Monthly Analysis */}
       <ExpenseAnalysis
-        analysis={monthlyAnalysis}
+        analysis={monthlyAnalysis ?? null}
         availableMonths={availableAnalysisMonths}
-        selectedMonth={selectedAnalysisMonth}
+        selectedMonth={selectedAnalysisMonth ?? null}
         onMonthChange={onMonthSelect}
         analysisOptions={analysisOptions}
         onOptionsChange={onOptionsChange}
