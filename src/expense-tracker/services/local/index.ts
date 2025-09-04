@@ -3,6 +3,7 @@ import type {
   AnalysisPort,
   VizPort,
   ServiceFactory,
+  ContractTestSuiteResult,
 } from "../ports.ts";
 import { LocalCsvService } from "../LocalCsvService.ts";
 import { LocalAnalysisService } from "../LocalAnalysisService.ts";
@@ -126,109 +127,45 @@ export class LocalServiceFactory implements ServiceFactory {
 
   /**
    * Validates that all services implement their contracts correctly
-   * Note: Contract validation will be implemented in task 15
+   * Uses the shared contract test suite to ensure LocalService and RemoteService compatibility
    */
-  async validateContracts(): Promise<any> {
+  async validateContracts(): Promise<ContractTestSuiteResult> {
     try {
+      // Import the contract test suite dynamically to avoid circular dependencies
+      const { createContractTestSuite } = await import(
+        "../__tests__/ContractTestSuite.ts"
+      );
+
       // Ensure services are initialized before validation
       const services = this.createServices();
 
-      // Basic validation that services implement required methods
-      const csvMethods = [
-        "validateAndParse",
-        "normalizeTransactions",
-        "normalizeDate",
-        "canonicalizeAmount",
-      ];
-      const analysisMethods = [
-        "calculateMonthlySummary",
-        "calculateOverallSummary",
-        "generateBalanceHistory",
-        "groupByTransactionType",
-      ];
-      const vizMethods = [
-        "prepareMonthlyChartData",
-        "prepareBalanceChartData",
-        "prepareTypeChartData",
-        "generateTextualSummary",
-      ];
+      // Run the comprehensive contract validation suite
+      const contractTestSuite = createContractTestSuite();
+      const result = await contractTestSuite.validateAllPorts(services);
 
-      const errors: string[] = [];
-
-      // Validate CSV service methods
-      for (const method of csvMethods) {
-        if (typeof (services.csv as any)[method] !== "function") {
-          errors.push(`CsvPort missing method: ${method}`);
-        }
-      }
-
-      // Validate Analysis service methods
-      for (const method of analysisMethods) {
-        if (typeof (services.analysis as any)[method] !== "function") {
-          errors.push(`AnalysisPort missing method: ${method}`);
-        }
-      }
-
-      // Validate Viz service methods
-      for (const method of vizMethods) {
-        if (typeof (services.viz as any)[method] !== "function") {
-          errors.push(`VizPort missing method: ${method}`);
-        }
-      }
-
-      const allPassed = errors.length === 0;
-
-      // TODO: Implement full contract validation in task 15
-      return {
-        allPassed,
-        csvPort: {
-          passed: !errors.some((e) => e.includes("CsvPort")),
-          errors: errors.filter((e) => e.includes("CsvPort")),
-          warnings: [],
-          testCases: [],
-        },
-        analysisPort: {
-          passed: !errors.some((e) => e.includes("AnalysisPort")),
-          errors: errors.filter((e) => e.includes("AnalysisPort")),
-          warnings: [],
-          testCases: [],
-        },
-        vizPort: {
-          passed: !errors.some((e) => e.includes("VizPort")),
-          errors: errors.filter((e) => e.includes("VizPort")),
-          warnings: [],
-          testCases: [],
-        },
-        summary: {
-          totalTests:
-            csvMethods.length + analysisMethods.length + vizMethods.length,
-          passedTests:
-            csvMethods.length +
-            analysisMethods.length +
-            vizMethods.length -
-            errors.length,
-          failedTests: errors.length,
-          totalDuration: 0,
-        },
-      };
+      return result;
     } catch (error) {
+      // Return error result if contract validation fails
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       return {
         allPassed: false,
         csvPort: {
           passed: false,
-          errors: ["Service initialization failed"],
+          errors: [`Contract validation failed: ${errorMessage}`],
           warnings: [],
           testCases: [],
         },
         analysisPort: {
           passed: false,
-          errors: ["Service initialization failed"],
+          errors: [`Contract validation failed: ${errorMessage}`],
           warnings: [],
           testCases: [],
         },
         vizPort: {
           passed: false,
-          errors: ["Service initialization failed"],
+          errors: [`Contract validation failed: ${errorMessage}`],
           warnings: [],
           testCases: [],
         },
