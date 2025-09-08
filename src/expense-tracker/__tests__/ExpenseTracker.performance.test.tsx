@@ -2,6 +2,16 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ExpenseTracker } from "../ExpenseTracker";
+import { AppContextProvider } from "../../app/context";
+
+// Helper function to render ExpenseTracker with required providers
+function renderExpenseTracker() {
+  return render(
+    <AppContextProvider>
+      <ExpenseTracker />
+    </AppContextProvider>
+  );
+}
 
 // Mock performance API
 Object.defineProperty(window, "performance", {
@@ -104,7 +114,7 @@ describe("ExpenseTracker Performance", () => {
       writable: true,
     });
 
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     const fileUpload = screen.getByTestId("file-upload");
     const maxSize = fileUpload.getAttribute("data-max-size");
@@ -123,7 +133,7 @@ describe("ExpenseTracker Performance", () => {
       writable: true,
     });
 
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     expect(
       screen.getByText("10 MB (reducido para este dispositivo)")
@@ -146,7 +156,7 @@ describe("ExpenseTracker Performance", () => {
       writable: true,
     });
 
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     const fileUpload = screen.getByTestId("file-upload");
     const maxSize = fileUpload.getAttribute("data-max-size");

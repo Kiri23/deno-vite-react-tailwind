@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ExpenseTracker } from "../ExpenseTracker";
+import { AppContextProvider } from "../../app/context";
+
+// Helper function to render ExpenseTracker with required providers
+function renderExpenseTracker() {
+  return render(
+    <AppContextProvider>
+      <ExpenseTracker />
+    </AppContextProvider>
+  );
+}
 
 // Mock Chart.js
 vi.mock("react-chartjs-2", () => ({
@@ -72,14 +82,14 @@ describe("ExpenseTracker Integration", () => {
   });
 
   it("should render the main title and upload section", () => {
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     expect(screen.getByText("Seguimiento de Gastos")).toBeInTheDocument();
     expect(screen.getByText("Cargar archivo CSV")).toBeInTheDocument();
   });
 
   it("should show empty state when no data is loaded", () => {
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     expect(
       screen.getByText("¡Comienza tu análisis financiero!")
@@ -88,7 +98,7 @@ describe("ExpenseTracker Integration", () => {
   });
 
   it("should have proper accessibility structure", () => {
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     // Check for skip link
     expect(
@@ -116,7 +126,7 @@ describe("ExpenseTracker Integration", () => {
       value: 1,
     });
 
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     // The component should detect this as a slow device and adjust accordingly
     expect(
@@ -125,14 +135,14 @@ describe("ExpenseTracker Integration", () => {
   });
 
   it("should handle clear data functionality", async () => {
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     // Initially, clear data button should not be visible
     expect(screen.queryByText("Limpiar datos")).not.toBeInTheDocument();
   });
 
   it("should render with proper ARIA labels and roles", () => {
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     // Check for proper ARIA structure
     const main = screen.getByRole("main");
@@ -146,7 +156,7 @@ describe("ExpenseTracker Integration", () => {
   });
 
   it("should handle keyboard navigation", () => {
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     const skipLink = screen.getByText("Saltar al contenido principal");
     expect(skipLink).toHaveClass("sr-only");
@@ -157,14 +167,14 @@ describe("ExpenseTracker Integration", () => {
   });
 
   it("should show loading state appropriately", () => {
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     // Initially should not show loading
     expect(screen.queryByText("Procesando archivo...")).not.toBeInTheDocument();
   });
 
   it("should handle responsive design classes", () => {
-    render(<ExpenseTracker />);
+    renderExpenseTracker();
 
     const headerContainer = screen
       .getByText("Seguimiento de Gastos")

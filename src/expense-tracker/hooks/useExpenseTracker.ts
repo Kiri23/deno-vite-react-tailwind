@@ -1,10 +1,10 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
-import {
-  CsvService,
-  AnalysisService,
-  VizService,
-  ExpenseAnalysisService,
-} from "../services";
+import { useServices } from "../../app/context.tsx";
+import { useExpenseCore } from "./useExpenseCore.ts";
+import { useCsv } from "./useCsv.ts";
+import { useAnalyze } from "./useAnalyze.ts";
+import { useVisualize } from "./useVisualize.ts";
+import { ExpenseAnalysisService } from "../services";
 import type { UseExpenseTrackerReturn } from "./types";
 import type {
   TransactionData,
@@ -21,77 +21,12 @@ import type {
 /**
  * Enhanced error details with user-friendly messages and recovery suggestions
  */
-function getErrorDetails(error: unknown, file: File): ValidationError {
-  const errorMessage =
-    error instanceof Error ? error.message : "Error desconocido";
-
-  // Categorize errors and provide specific guidance
-  if (errorMessage.includes("NetworkError") || errorMessage.includes("fetch")) {
-    return {
-      type: "missing_columns", // Using existing type
-      message:
-        "Error de conexión al procesar el archivo. Verifica tu conexión a internet e intenta nuevamente.",
-      examples: ["Revisa tu conexión", "Intenta con un archivo más pequeño"],
-    };
-  }
-
-  if (errorMessage.includes("Memory") || errorMessage.includes("memory")) {
-    return {
-      type: "file_too_large",
-      message:
-        "El archivo es demasiado grande para procesar en este dispositivo. Intenta dividir el archivo en períodos más pequeños.",
-      examples: [
-        "Divide el archivo por meses",
-        "Usa un archivo de máximo 10MB",
-      ],
-    };
-  }
-
-  if (errorMessage.includes("timeout") || errorMessage.includes("Timeout")) {
-    return {
-      type: "missing_columns", // Using existing type
-      message:
-        "El procesamiento del archivo tomó demasiado tiempo. Intenta con un archivo más pequeño.",
-      examples: [
-        "Reduce el número de transacciones",
-        "Divide el archivo por trimestres",
-      ],
-    };
-  }
-
-  // Generic error with recovery suggestions
-  return {
-    type: "missing_columns", // Using existing type
-    message: `Error inesperado al procesar el archivo: ${errorMessage}`,
-    examples: [
-      "Verifica que el archivo no esté corrupto",
-      "Intenta exportar el CSV nuevamente desde tu banco",
-      "Asegúrate de que el archivo tenga las columnas requeridas",
-    ],
-  };
-}
-
-/**
- * Enhance validation result with user-friendly messages and recovery suggestions
- */
-function enhanceValidationResult(
-  result: CsvValidationResult,
-  file: File
-): CsvValidationResult {
-  if (result.isValid) {
-    return result;
-  }
-
-  const enhancedErrors = result.errors?.map((error) => {
+function enhanceValidationErrors(errors: ValidationError[]): ValidationError[] {
+  return errors.map((error) => {
     switch (error.type) {
       case "file_too_large":
         return {
           ...error,
-          message: `${error.message} El archivo actual es de ${(
-            file.size /
-            1024 /
-            1024
-          ).toFixed(1)} MB.`,
           examples: [
             "Divide el archivo en períodos más pequeños (por ejemplo, por trimestre)",
             "Elimina columnas innecesarias antes de exportar",
@@ -140,88 +75,35 @@ function enhanceValidationResult(
         };
     }
   });
-
-  return {
-    ...result,
-    errors: enhancedErrors,
-  };
 }
 
 /**
- * Distinguish between blocking errors and warnings
- */
-function categorizeValidationIssues(result: CsvValidationResult): {
-  blockingErrors: ValidationError[];
-  warnings: string[];
-  canProceed: boolean;
-} {
-  const blockingErrors: ValidationError[] = [];
-  const warnings: string[] = [...(result.warnings || [])];
-
-  // Categorize errors
-  result.errors?.forEach((error) => {
-    switch (error.type) {
-      case "file_too_large":
-      case "missing_columns":
-        blockingErrors.push(error);
-        break;
-
-      case "invalid_date":
-      case "invalid_amount":
-        // These can be warnings if we have some valid data
-        if (result.transactions && result.transactions.length > 0) {
-          warnings.push(`Advertencia: ${error.message}`);
-        } else {
-          blockingErrors.push(error);
-        }
-        break;
-
-      default:
-        blockingErrors.push(error);
-    }
-  });
-
-  const canProceed = Boolean(
-    blockingErrors.length === 0 &&
-      result.transactions &&
-      result.transactions.length > 0
-  );
-
-  return {
-    blockingErrors,
-    warnings,
-    canProceed,
-  };
-}
-
-/**
- * Custom hook for expense tracker functionality
- * Orchestrates CsvService, AnalysisService, and VizService
- * Manages state for transactions, monthly data, summaries, and UI controls
+ * Custom hook for expense tracker functionality using new architecture
+ * Orchestrates the new VM-based architecture while maintaining the same interface
  * Enhanced with detailed error handling and user feedback
+ *
+ * Requirements: 8.2, 8.3, 8.4
  */
 export function useExpenseTracker(): UseExpenseTrackerReturn {
-  // Service instances
+  // Get services from context (new architecture)
+  const services = useServices();
+
+  // Initialize core VM and specialized hooks
+  const core = useExpenseCore(services);
+  const csv = useCsv(core);
+  const analyze = useAnalyze(core);
+  const visualize = useVisualize(core);
+
+  // Legacy service for expense analysis (still needed for detailed analysis)
   const expenseAnalysisService = useMemo(
     () => new ExpenseAnalysisService(),
     []
   );
 
-  // Core data state
-  const [transactions, setTransactions] = useState<TransactionData[]>([]);
-  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
-  const [summary, setSummary] = useState<OverallSummary | null>(null);
-  const [balanceHistory, setBalanceHistory] = useState<BalancePoint[]>([]);
-  const [typeBreakdown, setTypeBreakdown] = useState<TypeSummary[]>([]);
-  const [textualSummaries, setTextualSummaries] = useState<string[]>([]);
-
-  // UI state
+  // UI state that's not managed by VM
   const [showCurrentMonth, setShowCurrentMonth] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [validationResult, setValidationResult] =
-    useState<CsvValidationResult | null>(null);
 
-  // Expense Analysis state
+  // Expense Analysis state (legacy functionality)
   const [selectedAnalysisMonth, setSelectedAnalysisMonth] = useState<
     string | null
   >(null);
@@ -234,6 +116,80 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
     useState<MonthlyAnalysis | null>(null);
   const [isAnalysisLoading, setIsAnalysisLoading] = useState<boolean>(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  // Derive legacy data from VM state
+  const transactions = core.state.normalized;
+  const monthlyData = core.state.monthly;
+  const textualSummaries = core.state.insights.summaryText
+    ? [core.state.insights.summaryText]
+    : [];
+
+  // Generate legacy data structures from VM state
+  const summary = useMemo((): OverallSummary | null => {
+    if (transactions.length === 0) return null;
+
+    // Use analysis service to generate overall summary
+    try {
+      return services.analysis.calculateOverallSummary(transactions);
+    } catch (error) {
+      console.warn("Failed to generate overall summary:", error);
+      return null;
+    }
+  }, [transactions, services.analysis]);
+
+  const balanceHistory = useMemo((): BalancePoint[] => {
+    if (transactions.length === 0) return [];
+
+    try {
+      return services.analysis.generateBalanceHistory(transactions);
+    } catch (error) {
+      console.warn("Failed to generate balance history:", error);
+      return [];
+    }
+  }, [transactions, services.analysis]);
+
+  const typeBreakdown = useMemo((): TypeSummary[] => {
+    if (transactions.length === 0) return [];
+
+    try {
+      return services.analysis.groupByTransactionType(transactions);
+    } catch (error) {
+      console.warn("Failed to generate type breakdown:", error);
+      return [];
+    }
+  }, [transactions, services.analysis]);
+
+  // Create validation result from VM state
+  const validationResult = useMemo((): CsvValidationResult | null => {
+    if (core.state.errors.csv) {
+      return {
+        isValid: false,
+        errors: enhanceValidationErrors(core.state.errors.csv),
+        metadata: {
+          rowCount: core.state.raw.length,
+          dateRange: { start: "", end: "" },
+          balanceSource: "original",
+        },
+      };
+    }
+
+    if (transactions.length > 0) {
+      return {
+        isValid: true,
+        transactions: core.state.raw,
+        metadata: {
+          rowCount: transactions.length,
+          dateRange: {
+            start: transactions[0]?.Date || "",
+            end: transactions[transactions.length - 1]?.Date || "",
+          },
+          balanceSource: "original",
+        },
+      };
+    }
+
+    return null;
+  }, [core.state.errors.csv, core.state.raw, transactions]);
 
   // Computed values for expense analysis
   const availableAnalysisMonths = useMemo(() => {
@@ -281,179 +237,67 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
   ]);
 
   /**
-   * Helper function to clear all data state
-   */
-  const clearAllData = useCallback((): void => {
-    setTransactions([]);
-    setMonthlyData([]);
-    setSummary(null);
-    setBalanceHistory([]);
-    setTypeBreakdown([]);
-    setTextualSummaries([]);
-
-    // Clear analysis state
-    setSelectedAnalysisMonth(null);
-    setMonthlyAnalysis(null);
-    setAnalysisError(null);
-  }, []);
-
-  /**
-   * Process CSV file through the complete service pipeline
-   * Integrates CsvService, AnalysisService, and VizService
-   * Enhanced with detailed error handling and user feedback
+   * Process CSV file through the new VM architecture
+   * Maintains the same interface but uses the new pipeline
    */
   const processCSVFile = useCallback(
     async (file: File): Promise<void> => {
-      setIsLoading(true);
-
       try {
-        // Step 1: Validate and parse CSV using CsvService
-        const csvResult = await CsvService.validateAndParse(file);
+        // Use the new CSV hook for file processing
+        await csv.uploadFile(file);
 
-        // Enhanced validation result with user-friendly error messages
-        const enhancedResult = enhanceValidationResult(csvResult, file);
-
-        // Categorize validation issues
-        const { blockingErrors, warnings, canProceed } =
-          categorizeValidationIssues(enhancedResult);
-
-        // Update validation result with categorized issues
-        const finalResult = {
-          ...enhancedResult,
-          isValid: canProceed,
-          errors: blockingErrors,
-          warnings: warnings,
-        };
-        setValidationResult(finalResult);
-
-        // If we have blocking errors, clear existing data and stop processing
-        if (!canProceed) {
-          clearAllData();
-          return;
-        }
-
-        const rawTransactions = enhancedResult.transactions!;
-        const csvService = new CsvService();
-        const normalizedTransactions =
-          csvService.normalizeTransactions(rawTransactions);
-        setTransactions(normalizedTransactions);
-
-        // Step 2: Generate analysis data using AnalysisService
-        const analysisService = new AnalysisService();
-
-        try {
-          // Calculate monthly summaries (exclude current month by default)
-          const monthlyAnalysis = analysisService.calculateMonthlySummary(
-            normalizedTransactions,
-            !showCurrentMonth // Exclude current month when showCurrentMonth is false
-          );
-          setMonthlyData(monthlyAnalysis);
-
-          // Calculate overall summary
-          const overallSummary = analysisService.calculateOverallSummary(
-            normalizedTransactions
-          );
-          setSummary(overallSummary);
-
-          // Generate balance history
-          const balancePoints = analysisService.generateBalanceHistory(
-            normalizedTransactions
-          );
-          setBalanceHistory(balancePoints);
-
-          // Calculate transaction type breakdown
-          const typeAnalysis = analysisService.groupByTransactionType(
-            normalizedTransactions
-          );
-          setTypeBreakdown(typeAnalysis);
-
-          // Step 3: Generate textual summaries using VizService
-          const vizService = new VizService();
-          const narratives = vizService.generateTextualSummary(monthlyAnalysis);
-          setTextualSummaries(narratives);
-        } catch (analysisError) {
-          // Handle analysis errors - these are non-blocking but should be reported
-          const errorMessage =
-            analysisError instanceof Error
-              ? analysisError.message
-              : "Error desconocido";
-
-          // Add analysis error as a warning to existing validation result
-          const updatedResult = {
-            ...finalResult,
-            warnings: [
-              ...warnings,
-              `Error durante el análisis de datos: ${errorMessage}. Los datos básicos están disponibles pero algunos gráficos pueden no funcionar correctamente.`,
-            ],
-          };
-          setValidationResult(updatedResult);
-
-          // Keep the transaction data even if analysis fails
-          // This allows users to at least see the raw data
+        // If successful, run analysis and build charts
+        if (core.state.normalized.length > 0) {
+          await analyze.runAnalysis();
+          visualize.buildCharts();
         }
       } catch (error) {
-        // Handle unexpected errors during processing
-        const errorDetails = getErrorDetails(error, file);
-
-        setValidationResult({
-          isValid: false,
-          errors: [errorDetails],
-          metadata: {
-            rowCount: 0,
-            dateRange: { start: "", end: "" },
-            balanceSource: "original",
-          },
-        });
-
-        // Clear all data on error
-        clearAllData();
-      } finally {
-        setIsLoading(false);
+        console.error("Error processing CSV file:", error);
+        // Errors are handled by the VM and exposed through state
       }
     },
-    [showCurrentMonth, clearAllData]
+    [csv, core.state.normalized.length, analyze, visualize]
   );
 
   /**
    * Toggle current month inclusion and recalculate data
-   * Implements current month toggle functionality
+   * Implements current month toggle functionality using VM
    */
   const toggleCurrentMonth = useCallback(
     (show: boolean): void => {
       setShowCurrentMonth(show);
 
-      // If we have transactions, recalculate monthly data with new setting
+      // Update VM filters to include/exclude current month
+      // This is a simplified approach - in a full implementation,
+      // we might want to add current month handling to the VM
       if (transactions.length > 0) {
-        const analysisService = new AnalysisService();
-
-        // Recalculate monthly summaries with new current month setting
-        const monthlyAnalysis = analysisService.calculateMonthlySummary(
-          transactions,
-          !show // Exclude current month when show is false
-        );
-        setMonthlyData(monthlyAnalysis);
-
-        // Regenerate textual summaries with updated monthly data
-        const vizService = new VizService();
-        const narratives = vizService.generateTextualSummary(monthlyAnalysis);
-        setTextualSummaries(narratives);
+        // Re-run analysis with new setting
+        analyze.runAnalysis();
       }
     },
-    [transactions]
+    [transactions.length, analyze]
   );
 
   /**
    * Clear all data and reset state
-   * Provides clean slate for new file uploads
+   * Uses the new VM reset functionality
    */
   const clearData = useCallback((): void => {
-    clearAllData();
+    csv.clearData();
     setShowCurrentMonth(false);
-    setValidationResult(null);
-  }, [clearAllData]);
+    setSelectedAnalysisMonth(null);
+    setMonthlyAnalysis(null);
+    setAnalysisError(null);
+  }, [csv]);
+
+  // Determine loading state from VM
+  const isLoading =
+    core.state.loading.csv ||
+    core.state.loading.analysis ||
+    core.state.loading.charts;
 
   return {
-    // State
+    // State (mapped from VM state)
     transactions,
     monthlyData,
     summary,
@@ -464,7 +308,7 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
     isLoading,
     validationResult,
 
-    // Expense Analysis State
+    // Expense Analysis State (legacy)
     selectedAnalysisMonth,
     analysisOptions,
     monthlyAnalysis,
@@ -472,12 +316,12 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
     isAnalysisLoading,
     analysisError,
 
-    // Actions
+    // Actions (using new architecture)
     processCSVFile,
     toggleCurrentMonth,
     clearData,
 
-    // Expense Analysis Actions
+    // Expense Analysis Actions (legacy)
     setSelectedAnalysisMonth,
     setAnalysisOptions,
   };

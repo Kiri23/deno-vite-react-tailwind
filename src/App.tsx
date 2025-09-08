@@ -132,7 +132,9 @@ function App() {
               expense tracker with improved separation of concerns.
             </p>
           </div>
-          <ExpenseTracker />
+          <AppContextProvider>
+            <ExpenseTracker />
+          </AppContextProvider>
         </div>
 
         {/* Features Section */}
