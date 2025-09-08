@@ -61,13 +61,8 @@ export function useVisualize(core: UseExpenseCoreReturn): UseVisualizeReturn {
    * Build chart datasets from current data
    */
   const buildCharts = useCallback(() => {
-    // Ensure we have source data for chart generation
-    if (core.state.normalized.length === 0) {
-      return;
-    }
-
     core.commands.buildCharts();
-  }, [core.commands, core.state.normalized.length]);
+  }, [core.commands]);
 
   /**
    * Check if we have chart data available

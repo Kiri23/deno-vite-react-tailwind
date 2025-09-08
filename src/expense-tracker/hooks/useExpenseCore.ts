@@ -41,6 +41,7 @@ export interface UseExpenseCoreReturn {
 export function useExpenseCore(services: Services): UseExpenseCoreReturn {
   // Create VM instance (stable across re-renders)
   const vm = useMemo(() => createExpenseVM(services), [services]);
+  console.log("xz useExpenseCore: vm:", vm.getState());
 
   // Subscribe to VM state changes using React's external store hook
   const state = useSyncExternalStore(
@@ -48,6 +49,7 @@ export function useExpenseCore(services: Services): UseExpenseCoreReturn {
     vm.getState,
     vm.getState // Server-side snapshot (same as client for SSR compatibility)
   );
+  console.log("xz useExpenseTracker: state:", state);
 
   return {
     state,

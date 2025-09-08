@@ -84,19 +84,10 @@ export function useAnalyze(core: UseExpenseCoreReturn): UseAnalyzeReturn {
    * Run complete analysis pipeline with insights
    */
   const runAnalysis = useCallback(async () => {
-    // Ensure we have normalized data
-    if (core.state.normalized.length === 0) {
-      return;
-    }
-
-    // Run analysis
+    // Run analysis regardless; commands handle guards
     await core.commands.analyze();
-
-    // Generate insights after analysis completes
-    if (core.state.monthly.length > 0) {
-      core.commands.explain();
-    }
-  }, [core.commands, core.state.normalized.length, core.state.monthly.length]);
+    core.commands.explain();
+  }, [core.commands]);
 
   /**
    * Set date range and trigger re-analysis if data exists
@@ -110,7 +101,7 @@ export function useAnalyze(core: UseExpenseCoreReturn): UseAnalyzeReturn {
         runAnalysis();
       }
     },
-    [core.commands, core.state.normalized.length, runAnalysis]
+    [core.commands, core.state.normalized.length, runAnalysis],
   );
 
   /**
@@ -125,7 +116,7 @@ export function useAnalyze(core: UseExpenseCoreReturn): UseAnalyzeReturn {
         runAnalysis();
       }
     },
-    [core.commands, core.state.normalized.length, runAnalysis]
+    [core.commands, core.state.normalized.length, runAnalysis],
   );
 
   return {

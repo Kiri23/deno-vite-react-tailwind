@@ -1,19 +1,20 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FileUpload } from "../expense-tracker/components";
-import { useExpenseTracker } from "../expense-tracker/hooks";
-import { useUserData } from "../contexts/UserDataContext";
+import { FileUpload } from "../expense-tracker/components/index.ts";
+import { useExpenseTracker } from "../expense-tracker/hooks/index.ts";
+import { useUserData } from "../contexts/UserDataContext.tsx";
 
 export function ImportCsvPage() {
   const navigate = useNavigate();
   const { addDataset, datasets } = useUserData();
   const [datasetName, setDatasetName] = useState("");
+  const fileName = useRef("");
   const [showNameInput, setShowNameInput] = useState(false);
   const [pendingData, setPendingData] = useState<{
     fileName: string;
-    transactions: any[];
-    monthlyData: any[];
-    summary: any;
+    transactions: ReturnType<typeof useExpenseTracker>["transactions"];
+    monthlyData: ReturnType<typeof useExpenseTracker>["monthlyData"];
+    summary: ReturnType<typeof useExpenseTracker>["summary"];
   } | null>(null);
 
   const {
@@ -28,21 +29,10 @@ export function ImportCsvPage() {
 
   const handleFileProcessed = useCallback(
     async (file: File) => {
+      fileName.current = file.name;
       await processCSVFile(file);
-
-      // After processing, prepare to save as dataset
-      if (transactions.length > 0 && summary) {
-        setPendingData({
-          fileName: file.name,
-          transactions,
-          monthlyData,
-          summary,
-        });
-        setDatasetName(file.name.replace(".csv", ""));
-        setShowNameInput(true);
-      }
     },
-    [processCSVFile, transactions, monthlyData, summary]
+    [processCSVFile]
   );
 
   const handleSaveDataset = useCallback(() => {
@@ -74,7 +64,24 @@ export function ImportCsvPage() {
   }, [clearData]);
 
   const hasValidData = transactions.length > 0 && validationResult?.isValid;
+  console.log("xz ImportCsvPage hasValidData:", hasValidData);
 
+  useEffect(() => {
+    console.log("xz useEffect transactions:", transactions);
+    console.log("xz useEffect summary:", summary);
+    console.log("xz useEffect fileName:", fileName.current);
+    if (transactions.length > 0 && summary) {
+      setPendingData({
+        fileName: fileName.current,
+        transactions: transactions,
+        monthlyData: monthlyData,
+        summary: summary,
+      });
+      setDatasetName(fileName.current.replace(".csv", ""));
+      setShowNameInput(true);
+    }
+  }, [transactions, summary, monthlyData, fileName.current]);
+  
   return (
     <div className="max-w-4xl mx-auto">
       {/* Page Header */}
@@ -112,7 +119,7 @@ export function ImportCsvPage() {
                 <h3 className="text-lg font-semibold text-red-800 mb-3">
                   Error al procesar el archivo
                 </h3>
-                {validationResult.errors.map((error, index) => (
+                {validationResult.errors.map((error: any, index: number) => (
                   <div key={index} className="mb-4 last:mb-0">
                     <p className="text-red-700 font-medium mb-2">
                       {error.message}
@@ -123,7 +130,7 @@ export function ImportCsvPage() {
                           Sugerencias:
                         </p>
                         <ul className="text-sm text-red-700 space-y-1">
-                          {error.examples.map((example, exampleIndex) => (
+                          {error.examples.map((example: string, exampleIndex: number) => (
                             <li key={exampleIndex} className="flex items-start">
                               <span className="text-red-500 mr-2">•</span>
                               <span>{example}</span>
@@ -146,7 +153,7 @@ export function ImportCsvPage() {
             <div className="text-green-600 text-xl mr-3">✅</div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-green-800 mb-2">
-                Archivo procesado exitosamente
+                Archivo procesado exitosamentessr
               </h3>
               <p className="text-green-700 mb-4">
                 Se procesaron {transactions.length} transacciones correctamente.
@@ -173,6 +180,7 @@ export function ImportCsvPage() {
 
               <div className="flex flex-wrap gap-3">
                 <button
+                  type="button"
                   onClick={handleSaveDataset}
                   disabled={!datasetName.trim()}
                   className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
@@ -180,6 +188,7 @@ export function ImportCsvPage() {
                   Guardar y continuar →
                 </button>
                 <button
+                  type="button"
                   onClick={handleCancelSave}
                   className="text-gray-600 hover:text-gray-800 px-4 py-2 border border-gray-300 rounded-lg transition-colors"
                 >
@@ -191,42 +200,7 @@ export function ImportCsvPage() {
         </div>
       )}
 
-      {/* Simple success state when not showing name input */}
-      {hasValidData && !showNameInput && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-          <div className="flex items-start">
-            <div className="text-green-600 text-xl mr-3">✅</div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-green-800 mb-2">
-                Archivo procesado exitosamente
-              </h3>
-              <p className="text-green-700 mb-4">
-                Se procesaron {transactions.length} transacciones correctamente.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => setShowNameInput(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  Guardar dataset →
-                </button>
-                <Link
-                  to="/validate"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  Validar datos →
-                </Link>
-                <button
-                  onClick={clearData}
-                  className="text-gray-600 hover:text-gray-800 px-4 py-2 border border-gray-300 rounded-lg transition-colors"
-                >
-                  Cargar otro archivo
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Remove secondary success block to avoid duplicate save CTA */}
 
       {/* Existing Datasets */}
       {datasets.length > 0 && !hasValidData && (
@@ -235,7 +209,7 @@ export function ImportCsvPage() {
             Tus Datasets Existentes
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {datasets.map((dataset) => (
+            {datasets.map((dataset: any) => (
               <div
                 key={dataset.id}
                 className={`p-4 rounded-lg border-2 transition-all cursor-pointer hover:shadow-md ${
@@ -295,7 +269,7 @@ export function ImportCsvPage() {
           </h2>
           <FileUpload
             onFileProcessed={handleFileProcessed}
-            onError={(errors) => {
+            onError={(errors: any) => {
               console.error("FileUpload errors:", errors);
             }}
             maxFileSize={20 * 1024 * 1024}

@@ -90,7 +90,7 @@ export interface ValidationError {
 // CSV validation result
 export interface CsvValidationResult {
   isValid: boolean;
-  transactions?: RawTransaction[];
+  transactions?: TransactionData[]; // Changed from RawTransaction[] to TransactionData[] since CsvService returns normalized data
   errors?: ValidationError[];
   warnings?: string[];
   metadata: {

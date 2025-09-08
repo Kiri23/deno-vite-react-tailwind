@@ -39,6 +39,7 @@ export function AnalyzePage() {
           balanceSource: "original" as const,
         }
       : null;
+  console.log("xz AnalyzePage summary:", summary);
 
   return (
     <AnalyzeView

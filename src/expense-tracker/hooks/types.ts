@@ -9,7 +9,7 @@ import type {
   CsvValidationResult,
   MonthlyAnalysis,
   AnalysisOptions,
-} from "../types";
+} from "../types/index.ts";
 
 // useExpenseTracker hook return interface
 export interface UseExpenseTrackerReturn {
@@ -33,7 +33,11 @@ export interface UseExpenseTrackerReturn {
   analysisError: string | null;
 
   // Actions
-  processCSVFile: (file: File) => Promise<void>;
+  processCSVFile: (file: File) => Promise<{
+    transactions: TransactionData[];
+    monthlyData: MonthlyData[];
+    summary: OverallSummary | null;
+  }>;
   toggleCurrentMonth: (show: boolean) => void;
   clearData: () => void;
 

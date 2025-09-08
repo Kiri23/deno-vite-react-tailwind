@@ -1,0 +1,11 @@
+Date,Description,Type,Amount,Current balance,Status
+2024-01-15,Salary Deposit,Deposit,3000.00,3000.00,Posted
+2024-01-16,Grocery Store,Debit Card,-85.50,2914.50,Posted
+2024-01-17,Gas Station,Debit Card,-45.00,2869.50,Posted
+2024-01-18,ATM Withdrawal,Withdrawal,-100.00,2769.50,Posted
+2024-01-19,Restaurant,Debit Card,-25.75,2743.75,Posted
+2024-01-20,Transfer to Savings,Transfer,-500.00,2243.75,Posted
+2024-01-21,Online Purchase,Debit Card,-120.00,2123.75,Posted
+2024-01-22,Roundup Savings,Roundup,-0.25,2123.50,Posted
+2024-01-23,Utility Bill,Debit Card,-150.00,1973.50,Posted
+2024-01-24,Coffee Shop,Debit Card,-4.50,1969.00,Posted

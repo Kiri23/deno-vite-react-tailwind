@@ -88,6 +88,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   // Save to localStorage whenever datasets change (future: sync with API)
   const saveData = (datasets: UserDataset[]) => {
     try {
+      console.log("xz Se guarda en local storage user data:", datasets);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(datasets));
     } catch (error) {
       console.error("Error saving user data:", error);

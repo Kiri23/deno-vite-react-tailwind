@@ -68,7 +68,7 @@ export function ImportCsvView({
                 </div>
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-green-800">
-                    Archivo procesado exitosamente
+                    Archivo procesado exitosamentesView
                   </h3>
                   <div className="mt-2 text-sm text-green-700">
                     <p>

@@ -81,18 +81,19 @@ export interface ExpenseCommands {
   /**
    * Load and validate CSV file
    * @param file - CSV file to process
+   * @returns Normalized transactions after processing
    */
-  loadCsv(file: File): Promise<void>;
+  loadCsv(file: File): Promise<TransactionData[]>;
 
   /**
    * Normalize raw transaction data
    */
-  normalize(): Promise<void>;
+  normalize(): void;
 
   /**
    * Run financial analysis on normalized data
    */
-  analyze(): Promise<void>;
+  analyze(): void;
 
   /**
    * Build chart datasets from analysis results
@@ -177,7 +178,51 @@ function createInitialState(): ExpenseState {
  */
 export function createExpenseVM(services: Services): ExpenseVM {
   // Ref-based state management (Requirement: 3.3)
-  let state = createInitialState();
+  const STORAGE_KEY = "expense-tracker-datasets";
+
+  // Initialize state from localStorage if available, otherwise create initial state
+  let state = (() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const datasets = JSON.parse(stored);
+        const activeDataset = datasets.find((d: any) => d.isActive);
+
+        if (
+          activeDataset &&
+          activeDataset.transactions &&
+          activeDataset.monthlyData
+        ) {
+          // Initialize state with data from localStorage
+          return {
+            raw: activeDataset.transactions as unknown as RawTransaction[],
+            normalized: activeDataset.transactions,
+            monthly: activeDataset.monthlyData,
+            range: {},
+            filters: { categories: [] },
+            charts: {
+              monthly: [],
+              balance: { labels: [], datasets: [] },
+              types: { labels: [], datasets: [] },
+            },
+            insights: {},
+            loading: {
+              csv: false,
+              analysis: false,
+              charts: false,
+            },
+            errors: {},
+          };
+        }
+      }
+    } catch (error) {
+      console.warn("Error loading state from localStorage:", error);
+    }
+
+    // Fallback to initial state if localStorage is empty or invalid
+    return createInitialState();
+  })();
+
   const listeners = new Set<() => void>();
 
   /**
@@ -215,7 +260,7 @@ export function createExpenseVM(services: Services): ExpenseVM {
       setState((prev) => ({ ...prev, filters }));
     },
 
-    async loadCsv(file: File): Promise<void> {
+    async loadCsv(file: File): Promise<TransactionData[]> {
       try {
         setState((prev) => ({
           ...prev,
@@ -224,6 +269,7 @@ export function createExpenseVM(services: Services): ExpenseVM {
         }));
 
         const result = await services.csv.validateAndParse(file);
+        console.log("xz ExpenseVM.loadCsv: core commands result:", result);
 
         if (!result.isValid) {
           setState((prev) => ({
@@ -231,15 +277,28 @@ export function createExpenseVM(services: Services): ExpenseVM {
             errors: { ...prev.errors, csv: result.errors },
             loading: { ...prev.loading, csv: false },
           }));
-          return;
+          return [];
         }
+
+        // The CsvService already returns normalized transactions
+        // We need to store them in both raw and normalized fields
+        const transactions: TransactionData[] = result.transactions || [];
 
         setState((prev) => ({
           ...prev,
-          raw: result.transactions || [],
+          raw: transactions as unknown as RawTransaction[], // Store as raw for compatibility (type cast needed)
+          normalized: transactions, // Also store as normalized since service already normalized them
           loading: { ...prev.loading, csv: false },
         }));
+
+        console.log("ExpenseVM.loadCsv: CSV loaded successfully", {
+          transactionCount: transactions.length,
+          isValid: result.isValid,
+        });
+
+        return transactions;
       } catch (error) {
+        console.error("ExpenseVM.loadCsv: Error loading CSV:", error);
         setState((prev) => ({
           ...prev,
           errors: {
@@ -254,15 +313,21 @@ export function createExpenseVM(services: Services): ExpenseVM {
           },
           loading: { ...prev.loading, csv: false },
         }));
+        return [];
       }
     },
 
-    async normalize(): Promise<void> {
+    normalize(): void {
       try {
         const currentState = getState();
         if (currentState.raw.length === 0) {
-          throw new Error("No raw data to normalize");
+          console.warn("ExpenseVM.normalize: No raw data to normalize");
+          return;
         }
+
+        console.log("ExpenseVM.normalize: Starting normalization", {
+          rawCount: currentState.raw.length,
+        });
 
         const normalized = services.csv.normalizeTransactions(currentState.raw);
 
@@ -270,7 +335,15 @@ export function createExpenseVM(services: Services): ExpenseVM {
           ...prev,
           normalized,
         }));
+
+        console.log("ExpenseVM.normalize: Normalization completed", {
+          normalizedCount: normalized.length,
+        });
       } catch (error) {
+        console.error(
+          "ExpenseVM.normalize: Error during normalization:",
+          error,
+        );
         setState((prev) => ({
           ...prev,
           errors: {
@@ -282,7 +355,7 @@ export function createExpenseVM(services: Services): ExpenseVM {
       }
     },
 
-    async analyze(): Promise<void> {
+    analyze(): void {
       try {
         setState((prev) => ({
           ...prev,
@@ -321,14 +394,14 @@ export function createExpenseVM(services: Services): ExpenseVM {
         // Apply category filters
         if (currentState.filters.categories.length > 0) {
           filteredTransactions = filteredTransactions.filter((transaction) =>
-            currentState.filters.categories.includes(transaction.Type)
+            currentState.filters.categories.includes(transaction.Type),
           );
         }
 
         // Calculate monthly summary (excludes current month by default)
         const monthly = services.analysis.calculateMonthlySummary(
           filteredTransactions,
-          true // excludeCurrent
+          true, // excludeCurrent
         );
 
         setState((prev) => ({
@@ -364,17 +437,17 @@ export function createExpenseVM(services: Services): ExpenseVM {
 
         // Generate chart datasets
         const monthlyCharts = services.viz.prepareMonthlyChartData(
-          currentState.monthly
+          currentState.monthly,
         );
 
         const balanceHistory = services.analysis.generateBalanceHistory(
-          currentState.normalized
+          currentState.normalized,
         );
         const balanceChart =
           services.viz.prepareBalanceChartData(balanceHistory);
 
         const typeSummary = services.analysis.groupByTransactionType(
-          currentState.normalized
+          currentState.normalized,
         );
         const typesChart = services.viz.prepareTypeChartData(typeSummary);
 
@@ -411,7 +484,7 @@ export function createExpenseVM(services: Services): ExpenseVM {
 
         // Generate textual summary
         const summaryText = services.viz.generateTextualSummary(
-          currentState.monthly
+          currentState.monthly,
         );
 
         // Create contextual annotations for charts and tables

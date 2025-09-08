@@ -93,6 +93,7 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
   const csv = useCsv(core);
   const analyze = useAnalyze(core);
   const visualize = useVisualize(core);
+  console.log("xz useExpenseTracker: core:", core);
 
   // Legacy service for expense analysis (still needed for detailed analysis)
   const expenseAnalysisService = useMemo(
@@ -119,6 +120,7 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
 
   // Derive legacy data from VM state
   const transactions = core.state.normalized;
+  console.log("xz useExpenseTracker: transactions:", transactions);
   const monthlyData = core.state.monthly;
   const textualSummaries = core.state.insights.summaryText
     ? [core.state.insights.summaryText]
@@ -242,17 +244,20 @@ export function useExpenseTracker(): UseExpenseTrackerReturn {
    */
   const processCSVFile = useCallback(
     async (file: File): Promise<void> => {
+      console.log("xz processCSVFile: Starting with file:", file.name);
       try {
         // Use the new CSV hook for file processing
         await csv.uploadFile(file);
+        console.log("xz useExpenseTracker: processCSVFile: core.state:", core.state);
 
         // If successful, run analysis and build charts
         if (core.state.normalized.length > 0) {
+          console.log("xz processCSVFile: Running analysis and building charts");
           await analyze.runAnalysis();
           visualize.buildCharts();
         }
       } catch (error) {
-        console.error("Error processing CSV file:", error);
+        console.error("xz Error processing CSV file:", error);
         // Errors are handled by the VM and exposed through state
       }
     },

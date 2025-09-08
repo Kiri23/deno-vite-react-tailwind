@@ -63,39 +63,29 @@ export function useCsv(core: UseExpenseCoreReturn): UseCsvReturn {
    */
   const uploadFile = useCallback(
     async (file: File) => {
-      console.log("useCsv.uploadFile: Starting upload for", file.name);
+      console.log("xz useCsv.uploadFile: Starting upload for", file.name);
 
-      // Load and validate CSV
-      await core.commands.loadCsv(file);
+      try {
+        // Load and validate CSV (returns normalized transactions)
+        const transactions = await core.commands.loadCsv(file);
 
-      // We need to wait a bit for the state to update since it's async
-      // This is a temporary fix - ideally the commands should return the new state
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      console.log("useCsv.uploadFile: CSV loaded, state:", {
-        rawCount: core.state.raw.length,
-        errors: core.state.errors.csv,
-      });
-
-      // If successful, normalize the data
-      if (core.state.raw.length > 0 && !core.state.errors.csv) {
-        console.log("useCsv.uploadFile: Normalizing data...");
-        await core.commands.normalize();
-
-        // Wait for normalization to complete
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        console.log("useCsv.uploadFile: Normalization completed, state:", {
-          normalizedCount: core.state.normalized.length,
+        console.log("xz useCsv.uploadFile: CSV loaded, immediate result:", {
+          normalizedCount: transactions.length,
         });
-      } else {
-        console.warn("useCsv.uploadFile: Skipping normalization", {
-          rawCount: core.state.raw.length,
-          hasErrors: !!core.state.errors.csv,
-        });
+        console.log("xz useCsv.uploadFile: core.state:", core.state);
+
+        // Run analysis and build charts immediately without relying on re-render timing
+        if (transactions.length > 0) {
+          await core.commands.analyze();
+          core.commands.buildCharts();
+          core.commands.explain();
+        }
+      } catch (error) {
+        console.error("xz useCsv.uploadFile: Error during upload:", error);
+        throw error;
       }
     },
-    [core.commands, core.state]
+    [core.commands, core.state],
   );
 
   /**
