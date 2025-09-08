@@ -1,37 +1,25 @@
 import React from "react";
-import { createRoute, createRootRoute, Outlet } from "@tanstack/react-router";
+import { createRoute, createRootRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { ExpensesLayout } from "../layouts/ExpensesLayout";
+import { AppLayout } from "../layouts/AppLayout";
 import {
+  HomePage,
   ImportCsvPage,
   NormalizePage,
   AnalyzePage,
   VisualizePage,
 } from "../pages";
 
-// Root route
+// Root route with AppLayout
 export const rootRoute = createRootRoute({
-  component: () => <Outlet />,
+  component: AppLayout,
 });
 
-// Index route that redirects to expenses/import
+// Home page route
 export const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => {
-    // Redirect to expenses/import
-    React.useEffect(() => {
-      window.location.href = "/expenses/import";
-    }, []);
-    return <div>Redirecting...</div>;
-  },
-});
-
-// Expenses parent route
-export const expensesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/expenses",
-  component: ExpensesLayout,
+  component: HomePage,
 });
 
 // Zod schemas for search parameter validation
@@ -50,7 +38,7 @@ export const VisualizeSearchSchema = z.object({
   excludeCurrent: z.boolean().optional(),
 });
 
-export const NormalizeSearchSchema = z.object({
+export const ValidateSearchSchema = z.object({
   showRaw: z.boolean().optional(),
   showNormalized: z.boolean().optional(),
 });
@@ -61,30 +49,32 @@ export const ImportSearchSchema = z.object({
 
 // Import route
 export const importRoute = createRoute({
-  getParentRoute: () => expensesRoute,
+  getParentRoute: () => rootRoute,
   path: "/import",
   validateSearch: (search) => ImportSearchSchema.parse(search),
   component: ImportCsvPage,
-  pendingComponent: () => <div>Loading import page...</div>,
+  pendingComponent: () => <div>Cargando página de importación...</div>,
   errorComponent: ({ error }) => (
     <div className="p-4 bg-red-50 border border-red-200 rounded">
-      <h2 className="text-red-800 font-semibold">Error loading import page</h2>
+      <h2 className="text-red-800 font-semibold">
+        Error cargando página de importación
+      </h2>
       <p className="text-red-600">{error.message}</p>
     </div>
   ),
 });
 
-// Normalize route
-export const normalizeRoute = createRoute({
-  getParentRoute: () => expensesRoute,
-  path: "/normalize",
-  validateSearch: (search) => NormalizeSearchSchema.parse(search),
+// Validate route (renamed from normalize)
+export const validateRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/validate",
+  validateSearch: (search) => ValidateSearchSchema.parse(search),
   component: NormalizePage,
-  pendingComponent: () => <div>Loading normalize page...</div>,
+  pendingComponent: () => <div>Cargando página de validación...</div>,
   errorComponent: ({ error }) => (
     <div className="p-4 bg-red-50 border border-red-200 rounded">
       <h2 className="text-red-800 font-semibold">
-        Error loading normalize page
+        Error cargando página de validación
       </h2>
       <p className="text-red-600">{error.message}</p>
     </div>
@@ -93,14 +83,14 @@ export const normalizeRoute = createRoute({
 
 // Analyze route
 export const analyzeRoute = createRoute({
-  getParentRoute: () => expensesRoute,
+  getParentRoute: () => rootRoute,
   path: "/analyze",
   validateSearch: (search) => AnalyzeSearchSchema.parse(search),
   component: AnalyzePage,
-  pendingComponent: () => <div>Loading analysis...</div>,
+  pendingComponent: () => <div>Cargando análisis...</div>,
   errorComponent: ({ error }) => (
     <div className="p-4 bg-red-50 border border-red-200 rounded">
-      <h2 className="text-red-800 font-semibold">Error loading analysis</h2>
+      <h2 className="text-red-800 font-semibold">Error cargando análisis</h2>
       <p className="text-red-600">{error.message}</p>
     </div>
   ),
@@ -114,15 +104,15 @@ export const analyzeRoute = createRoute({
 
 // Visualize route
 export const visualizeRoute = createRoute({
-  getParentRoute: () => expensesRoute,
+  getParentRoute: () => rootRoute,
   path: "/visualize",
   validateSearch: (search) => VisualizeSearchSchema.parse(search),
   component: VisualizePage,
-  pendingComponent: () => <div>Loading visualizations...</div>,
+  pendingComponent: () => <div>Cargando visualizaciones...</div>,
   errorComponent: ({ error }) => (
     <div className="p-4 bg-red-50 border border-red-200 rounded">
       <h2 className="text-red-800 font-semibold">
-        Error loading visualizations
+        Error cargando visualizaciones
       </h2>
       <p className="text-red-600">{error.message}</p>
     </div>
@@ -138,16 +128,14 @@ export const visualizeRoute = createRoute({
 // Route tree
 export const routeTree = rootRoute.addChildren([
   indexRoute,
-  expensesRoute.addChildren([
-    importRoute,
-    normalizeRoute,
-    analyzeRoute,
-    visualizeRoute,
-  ]),
+  importRoute,
+  validateRoute,
+  analyzeRoute,
+  visualizeRoute,
 ]);
 
 // Export search schema types for use in components
 export type AnalyzeSearch = z.infer<typeof AnalyzeSearchSchema>;
 export type VisualizeSearch = z.infer<typeof VisualizeSearchSchema>;
-export type NormalizeSearch = z.infer<typeof NormalizeSearchSchema>;
+export type ValidateSearch = z.infer<typeof ValidateSearchSchema>;
 export type ImportSearch = z.infer<typeof ImportSearchSchema>;
